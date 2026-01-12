@@ -327,9 +327,12 @@ export function getSideViewBeams(cx, cy, scale, params) {
         beams.yellow1 = { x: cx - (H2R.x - cx), y: H2R.y, angle: -H2R.angle, w: L, h: T, color: COLORS.H2L, zIndex: 50 };
     }
 
+    // Determine which angle to report (Outermost leg)
+    const activeLegAngle = (params.L >= 2) ? H2_angle : H1_angle;
+
     const mechanics = {
         span: V1_span / pxPerCm,
-        angle: Math.abs(H1_angle * 180 / Math.PI)
+        angle: Math.abs(activeLegAngle * 180 / Math.PI)
     };
 
     return { beams, mechanics };
