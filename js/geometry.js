@@ -329,7 +329,7 @@ export function getSideViewBeams(cx, cy, scale, params) {
 
     const mechanics = {
         span: V1_span / pxPerCm,
-        angle: (liftAngle * 180 / Math.PI)
+        angle: Math.abs(H1_angle * 180 / Math.PI)
     };
 
     return { beams, mechanics };
