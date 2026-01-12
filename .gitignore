@@ -1,0 +1,6 @@
+.DS_Store
+.gemini/
+.claude/
+.playwright-mcp/
+.history/
+*.log
