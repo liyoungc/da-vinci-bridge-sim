@@ -12,40 +12,7 @@
 
 ### 結構示意圖 (Schematic)
 
-```mermaid
-graph TD
-    subgraph Layer2 [第二層 Layer 2]
-        V2((V2 支點)) --- H2_L[H2-L 左腳]
-        V2 --- H2_R[H2-R 右腳]
-    end
-    
-    subgraph Layer1 [第一層 Layer 1]
-        V1((V1 底座)) --- H1_L[H1-L 左腳]
-        V1 --- H1_R[H1-R 右腳]
-    end
-    
-    subgraph Core [核心 Core]
-        H0[H0 橫樑] --- V0(V0 頂點)
-    end
-
-    H1_L -->|壓在| V0
-    H1_R -->|壓在| V0
-    
-    H2_L -->|壓在| V1
-    H2_R -->|壓在| V1
-    
-    V0 -->|壓在| H0
-    H0 -->|壓在| V1
-    
-    style V0 fill:#da3d3d,color:#fff
-    style H0 fill:#228b22,color:#fff
-    style V1 fill:#ffb6c1,color:#000
-    style H1_L fill:#9370db,color:#fff
-    style H1_R fill:#4169e1,color:#fff
-    style V2 fill:#ff8c00,color:#fff
-    style H2_L fill:#ffd700,color:#000
-    style H2_R fill:#00ced1,color:#000
-```
+![Da Vinci Bridge Structure](annotated_bridge_brand.png)
 
 ## 定義與參數設定
 
@@ -106,56 +73,70 @@ graph TD
 目標：建立橋樑的頂點和第一層結構。
 
 ### 步驟 1：設置底座 (V1)
-* **材料**：2 根棍子
-* **操作**：將這兩根棍子以垂直方向，平行放置在地面上，間距約為 x - 2a。
-* **功能**：這是第一層的支點。
+
+- **材料**：2 根棍子
+
+- **操作**：將這兩根棍子以垂直方向，平行放置在地面上，間距約為 x - 2a。
+- **功能**：這是第一層的支點。
 
 ### 步驟 2：架設橫樑 (H0)
-* **材料**：2 根棍子
-* **操作**：將 H0 橫跨一上一下在兩根 V1 上，置於正中央，上下交叉點分別距離 H0 上下邊緣距離為 b，也就是P1位置。
+
+- **材料**：2 根棍子
+
+- **操作**：將 H0 橫跨一上一下在兩根 V1 上，置於正中央，上下交叉點分別距離 H0 上下邊緣距離為 b，也就是P1位置。
 
 ### 步驟 3：放置頂點橫樑 (V0)
-* **材料**：1 根棍子（**紅**）
-* **操作**：將 V0 垂直放在 H0 的正中央上方。
-* **檢查**：紅棍壓在綠棍中間（符合規則 1）。
+
+- **材料**：1 根棍子（**紅**）
+
+- **操作**：將 V0 垂直放在 H0 的正中央上方。
+- **檢查**：紅棍壓在綠棍中間（符合規則 1）。
 
 ## 第二階段：搭建第一層
 
 目標：利用槓桿原理讓結構站立起來。
 
 ### 步驟 4 & 5：插入第一層支撐腿 (H1-R, H1-L)
-* **材料**：4 根棍子
-* **操作（關鍵步驟）**：
+
+- **材料**：4 根棍子
+
+- **操作（關鍵步驟）**：
   1. 依上方"H斜插法"所述，俯瞰圖位置在P2。
   2. 對 H1-L 重複同樣的對稱動作，但基於水平棍互斥原則，H1-L 需放在 P3 位置。
-* **物理機制**：
-  * **支點**：V1
-  * **抗力點**：V0（被 H1 壓住）
+- **物理機制**：
+  - **支點**：V1
+  - **抗力點**：V0（被 H1 壓住）
 
 ## 第三階段：擴展至第二層 (Expansion to the 2nd Layer)
 
 目標：增加橋的高度與跨度。
 
 ### 步驟 6：加入第二層橫樑 (V2)
-* **材料**：2 根棍子
-* **操作**：
-  * 將兩個 V2 分別放置在 H1-R, H1-L 的「**下方**」，距離它們的外側邊緣位置是 a。
+
+- **材料**：2 根棍子
+
+- **操作**：
+  - 將兩個 V2 分別放置在 H1-R, H1-L 的「**下方**」，距離它們的外側邊緣位置是 a。
 
 ### 步驟 7 & 8：插入第二層支撐腿 (H2-R, H2-L)
-* **材料**：4 根棍子
-* **操作**：
+
+- **材料**：4 根棍子
+
+- **操作**：
   1. 拿起 H2-R 兩根，重覆"H斜插法"，垂直位置在 P3，除非水平棍互斥，則需啟動P－cis或P-trans。
   2. 將其**外側**延伸，中心點穿過 V2「下方」。
   3. 對 H2-L 重複一樣動作，但垂直位置變成 P4，除非水平棍互斥，則需啟動P－cis或P-trans。
-* **結構變化**：
-  * 現在，**H2** 取代了 H1 成為新的「腳」。
-  * **V2** 變成了新的支點。
-  * 原本的底座（V1）被架到了半空中。
+- **結構變化**：
+  - 現在，**H2** 取代了 H1 成為新的「腳」。
+  - **V2** 變成了新的支點。
+  - 原本的底座（V1）被架到了半空中。
 
 ## 第四階段
-### 重覆上一階段，每次可搭一層，P位置依P-cis或P-trans尋找。
+
+### 重覆上一階段，每次可搭一層，P位置依P-cis或P-trans尋找
 
 ## 總結
+
 這就是所謂的「互承結構」（Reciprocal Frame），每一根棍子都既支撐別人，也被別人支撐。不能讓每一個棍子有單獨的 z-index，要視交叉點的位置決定。
 
 ---
@@ -167,6 +148,7 @@ The brilliance of this bridge design lies in its ability to support itself using
 ## Definitions & Parameters
 
 ### Geometry Definitions
+
 This section lists the basic values adjustable by the user.
 
 | Symbol | Description |
@@ -181,6 +163,7 @@ This section lists the basic values adjustable by the user.
 | Pmax | Maximum allowable horizontal position index (minimum 3), default is 4 |
 
 ### Position Parameters
+
 Used to calculate the specific placement of horizontal beams.
 
 | Param | Formula / Description |
@@ -196,76 +179,90 @@ Used to calculate the specific placement of horizontal beams.
 
 Before starting, remember these two rules applicable to every intersection, and check them after every step:
 
-1.  **Mid-span Crossing**: Vertical beams ($V_n$) must always rest **ON TOP** of Horizontal beams ($H_n$).
-2.  **Tip Crossing**: The tips of Horizontal beams ($H_n$) must always rest **ON TOP** of Vertical beams ($V_n$).
+1. **Mid-span Crossing**: Vertical beams ($V_n$) must always rest **ON TOP** of Horizontal beams ($H_n$).
+2. **Tip Crossing**: The tips of Horizontal beams ($H_n$) must always rest **ON TOP** of Vertical beams ($V_n$).
 
 ### Top View vs. Side View
 
-1.  **Top View (Flat)**: Assumes beams have **no thickness**, purely showing X-Y plane intersections.
-2.  **Side View (3D Structure)**: Must consider:
-    *   **H-Wedge Method**: For H1-R, place bottom edge at distance `a` from the inner side, resting on V0's top-right corner, extending down-right so its top edge meets V1's bottom-left corner. Apply similarly for H1-L, H2-R, etc.
-    *   **No Overlap in Non-Crossing Areas**: Horizontal and vertical beams cannot visually overlap in side view (due to vertical hierarchy).
-    *   **Same-Type Overlap**: Horizontal beams can overlap with horizontal beams visually (front-back relationship).
-    *   **Stacking Order**: e.g., Layer 2 from top to bottom is H1 > V2 > H2.
+1. **Top View (Flat)**: Assumes beams have **no thickness**, purely showing X-Y plane intersections.
+2. **Side View (3D Structure)**: Must consider:
+    - **H-Wedge Method**: For H1-R, place bottom edge at distance `a` from the inner side, resting on V0's top-right corner, extending down-right so its top edge meets V1's bottom-left corner. Apply similarly for H1-L, H2-R, etc.
+    - **No Overlap in Non-Crossing Areas**: Horizontal and vertical beams cannot visually overlap in side view (due to vertical hierarchy).
+    - **Same-Type Overlap**: Horizontal beams can overlap with horizontal beams visually (front-back relationship).
+    - **Stacking Order**: e.g., Layer 2 from top to bottom is H1 > V2 > H2.
 
 ## Construction Principles
 
-1.  The structure is mirror-symmetric top-to-bottom (bridge sides), but asymmetric left-to-right (legs).
-2.  Build alternating left and right sides.
-3.  In Top View, all horizontal beam positions are mutually exclusive and strictly non-crossing.
+1. The structure is mirror-symmetric top-to-bottom (bridge sides), but asymmetric left-to-right (legs).
+2. Build alternating left and right sides.
+3. In Top View, all horizontal beam positions are mutually exclusive and strictly non-crossing.
 
 ## Phase 1: The Core Module
 
 **Goal**: Establish the bridge apex and the first layer structure.
 
 ### Step 1: Set the Base (V1)
-*   **Material**: 2 beams
-*   **Action**: Place these two beams vertically and parallel on the ground, spaced `x - 2a` apart.
-*   **Function**: First layer pivot points.
+
+- **Material**: 2 beams
+
+- **Action**: Place these two beams vertically and parallel on the ground, spaced `x - 2a` apart.
+- **Function**: First layer pivot points.
 
 ### Step 2: Mount the Cross Beam (H0)
-*   **Material**: 2 beams
-*   **Action**: Place H0 across the two V1 beams, one above and one below, centered at P1 (distance `b` from edges).
+
+- **Material**: 2 beams
+
+- **Action**: Place H0 across the two V1 beams, one above and one below, centered at P1 (distance `b` from edges).
 
 ### Step 3: Place the Apex Beam (V0)
-*   **Material**: 1 beam (**Red**)
-*   **Action**: Place V0 vertically centered on top of H0.
-*   **Check**: Red beam presses on the middle of the Green beam (Rule 1).
+
+- **Material**: 1 beam (**Red**)
+
+- **Action**: Place V0 vertically centered on top of H0.
+- **Check**: Red beam presses on the middle of the Green beam (Rule 1).
 
 ## Phase 2: Layer 1
 
 **Goal**: Leverage leverage principles to lift the structure.
 
 ### Steps 4 & 5: Insert Layer 1 Legs (H1-R, H1-L)
-*   **Material**: 4 beams
-*   **Action**:
-    1.  Using the "H-Wedge Method", place H1-R at Top View position P2.
-    2.  Repeat for H1-L symmetrically, but place at P3 due to exclusion rules.
-*   **Physics**:
-    *   **Pivot**: V1
-    *   **Load**: V0 (Pressed down by H1)
+
+- **Material**: 4 beams
+
+- **Action**:
+    1. Using the "H-Wedge Method", place H1-R at Top View position P2.
+    2. Repeat for H1-L symmetrically, but place at P3 due to exclusion rules.
+- **Physics**:
+  - **Pivot**: V1
+  - **Load**: V0 (Pressed down by H1)
 
 ## Phase 3: Expansion to Layer 2
 
 **Goal**: Increase height and span.
 
 ### Step 6: Add Layer 2 Cross Beams (V2)
-*   **Material**: 2 beams
-*   **Action**: Place two V2 beams strictly **UNDER** H1-R and H1-L, at distance `a` from their outer edges.
+
+- **Material**: 2 beams
+
+- **Action**: Place two V2 beams strictly **UNDER** H1-R and H1-L, at distance `a` from their outer edges.
 
 ### Steps 7 & 8: Insert Layer 2 Legs (H2-R, H2-L)
-*   **Material**: 4 beams
-*   **Action**:
-    1.  Take H2-R, repeat "H-Wedge Method", vertical pos at P3 (unless blocked, then use P-cis/P-trans).
-    2.  Extend its **outer** side so the center passes **UNDER** V2.
-    3.  Repeat for H2-L at P4 (unless blocked).
-*   **Structural Change**:
-    *   **H2** replaces H1 as the new "Leg".
-    *   **V2** becomes the new Pivot.
-    *   The original base (V1) is lifted into the air.
+
+- **Material**: 4 beams
+
+- **Action**:
+    1. Take H2-R, repeat "H-Wedge Method", vertical pos at P3 (unless blocked, then use P-cis/P-trans).
+    2. Extend its **outer** side so the center passes **UNDER** V2.
+    3. Repeat for H2-L at P4 (unless blocked).
+- **Structural Change**:
+  - **H2** replaces H1 as the new "Leg".
+  - **V2** becomes the new Pivot.
+  - The original base (V1) is lifted into the air.
 
 ## Phase 4
-### Repeat the previous phase, adding one layer at a time, finding P-positions via P-cis or P-trans.
+
+### Repeat the previous phase, adding one layer at a time, finding P-positions via P-cis or P-trans
 
 ## Summary
+
 This is the "Reciprocal Frame" structure. Every beam supports another while being supported itself. Beams do not have a single absolute Z-index; it depends on the specific intersection point.
