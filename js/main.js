@@ -331,20 +331,25 @@ function render() {
     const currentStepData = BUILD_STEPS[state.currentStep];
     const visibleBeams = currentStepData.beams;
 
-    Object.entries(allBeams).forEach(([key, beam]) => {
-        if (!visibleBeams.includes(key)) return;
+    Object.entries(allBeams)
+        .filter(([key]) => visibleBeams.includes(key))
+        .sort(([, a], [, b]) => {
+            const zA = a.zIndex ?? 0;
+            const zB = b.zIndex ?? 0;
+            return zA - zB;
+        })
+        .forEach(([, beam]) => {
+            // Check legacy mapping if key not found (for new geometry.js logic if keys changed)
+            // Constants has BEAM_MAP, but geometry.js returns keys like 'pink1', 'red1'.
+            // BUILD_STEPS uses these keys. Consistent.
+            // H2 logic might introduce new keys? checked geometry.js, keys match.
 
-        // Check legacy mapping if key not found (for new geometry.js logic if keys changed)
-        // Constants has BEAM_MAP, but geometry.js returns keys like 'pink1', 'red1'.
-        // BUILD_STEPS uses these keys. Consistent.
-        // H2 logic might introduce new keys? checked geometry.js, keys match.
+            renderer.drawBeam(beam);
 
-        renderer.drawBeam(beam);
-
-        // Debug Arrow (?)
-        // if (key === 'H2L-top') renderer.drawArrow(beam, 'H2L'); 
-        // Not needed for prod.
-    });
+            // Debug Arrow (?)
+            // if (key === 'H2L-top') renderer.drawArrow(beam, 'H2L'); 
+            // Not needed for prod.
+        });
 
     // Error Message
     if (buildError && state.currentView === 'top') {
