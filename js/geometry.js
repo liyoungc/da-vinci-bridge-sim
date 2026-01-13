@@ -68,7 +68,8 @@ export function findAvailableP(currentP, occupiedPs, mode, Pmax) {
     return null; // 找不到可用位置
 }
 
-export function getTopViewBeams(cx, cy, scale, params) {
+// 核心幾何計算邏輯
+export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     const pxPerCm = scale * 12;
 
     const x = params.x * pxPerCm;     // 棍長
@@ -121,8 +122,28 @@ export function getTopViewBeams(cx, cy, scale, params) {
     const H1L_P = 3;
     occupiedPs_L.push(H1L_P);
 
+    // Helper: Simple 1D overlap check (Moved up for H2-R usage)
+    // "Real world" check: Do the beams physically collide in this P-slot?
+    const checkOverlap = (centerA, centerB, len) => {
+        // Strict overlap: distance < length
+        return Math.abs(centerA - centerB) < (len - 0.01);
+    };
+
     // H2-R 預設在 P3 (右側)
-    let H2R_P = findAvailableP(3, occupiedPs_R, params.pMode, params.Pmax);
+    // 必須檢查是否跟左側的 H1-L (在 P3) 發生重疊
+    let blockedFromL = [];
+
+    // Check H0 (P1)
+    if (checkOverlap(cx, H2R_X, x)) blockedFromL.push(1);
+
+    // Check H1-L (P3 usually)
+    // H1-L X coord is H1L_X
+    if (checkOverlap(H1L_X, H2R_X, x)) blockedFromL.push(H1L_P);
+
+    // Combine with Right occupied list
+    let checkList_R = [...new Set([...occupiedPs_R, ...blockedFromL])];
+
+    let H2R_P = findAvailableP(3, checkList_R, params.pMode, params.Pmax);
     if (H2R_P === null) {
         buildError = 'H2-R 無法放置：P 位置不足';
         H2R_P = 3;
@@ -130,8 +151,22 @@ export function getTopViewBeams(cx, cy, scale, params) {
     occupiedPs_R.push(H2R_P);
 
     // H2-L 預設在 P3 (左側)
-    // 如果發生重疊，H2-L 必須同時檢查被 H2-R 佔用的位置
-    let checkList_L = doesH2Overlap ? [...occupiedPs_L, ...occupiedPs_R] : occupiedPs_L;
+    // 如果發生重疊，H2-L 必須同時檢查被 "真正重疊到" 的右側 P 位置
+    let blockedFromR = [];
+
+    // Check H0 (P1) - H0 is at cx (Center)
+    // H0 always blocks? H0 is effectively width x centered at cx.
+    if (checkOverlap(cx, H2L_X, x)) blockedFromR.push(1);
+
+    // Check H1-R (P2)
+    if (checkOverlap(H1R_X, H2L_X, x)) blockedFromR.push(H1R_P);
+
+    // Check H2-R (H2R_P)
+    if (checkOverlap(H2R_X, H2L_X, x)) blockedFromR.push(H2R_P);
+
+    // Combine with Left occupied list
+    // Use Set to avoid duplicates
+    let checkList_L = [...new Set([...occupiedPs_L, ...blockedFromR])];
 
     let H2L_P = findAvailableP(3, checkList_L, params.pMode, params.Pmax);
     if (H2L_P === null) {
@@ -160,72 +195,79 @@ export function getTopViewBeams(cx, cy, scale, params) {
     let beams = {};
 
     // H0 (綠色橫樑) - 基礎
-    beams.green1 = rect(COLORS.H0, cx, H0_top_Y, x, y, 10, 'green1', 'horizontal');
-    beams.green2 = rect(COLORS.H0, cx, H0_bot_Y, x, y, 10, 'green2', 'horizontal');
+    beams.green1 = rect(colors.H0, cx, H0_top_Y, x, y, 10, 'green1', 'horizontal');
+    beams.green2 = rect(colors.H0, cx, H0_bot_Y, x, y, 10, 'green2', 'horizontal');
 
     // H0 末端 patch (壓在 V1 上方)
-    beams.green1_tipL = rect(COLORS.H0, V1_left_X, H0_top_Y, y, y, 60, 'green1', 'horizontal-tip');
-    beams.green1_tipR = rect(COLORS.H0, V1_right_X, H0_top_Y, y, y, 60, 'green1', 'horizontal-tip');
-    beams.green2_tipL = rect(COLORS.H0, V1_left_X, H0_bot_Y, y, y, 60, 'green2', 'horizontal-tip');
-    beams.green2_tipR = rect(COLORS.H0, V1_right_X, H0_bot_Y, y, y, 60, 'green2', 'horizontal-tip');
+    beams.green1_tipL = rect(colors.H0, V1_left_X, H0_top_Y, y, y, 60, 'green1', 'horizontal-tip');
+    beams.green1_tipR = rect(colors.H0, V1_right_X, H0_top_Y, y, y, 60, 'green1', 'horizontal-tip');
+    beams.green2_tipL = rect(colors.H0, V1_left_X, H0_bot_Y, y, y, 60, 'green2', 'horizontal-tip');
+    beams.green2_tipR = rect(colors.H0, V1_right_X, H0_bot_Y, y, y, 60, 'green2', 'horizontal-tip');
 
     // V0 (紅色頂點)
-    beams.red1 = rect(COLORS.V0, V0_X, cy, y, x, 20, 'red1', 'vertical');
+    beams.red1 = rect(colors.V0, V0_X, cy, y, x, 20, 'red1', 'vertical');
 
     // H1-R (藍色右腳)
-    beams.blue1 = rect(COLORS.H1R, H1R_X, H1R_top_Y, x, y, 15, 'blue1', 'horizontal');
-    beams.blue2 = rect(COLORS.H1R, H1R_X, H1R_bot_Y, x, y, 15, 'blue2', 'horizontal');
+    beams.blue1 = rect(colors.H1R, H1R_X, H1R_top_Y, x, y, 15, 'blue1', 'horizontal');
+    beams.blue2 = rect(colors.H1R, H1R_X, H1R_bot_Y, x, y, 15, 'blue2', 'horizontal');
     // Patch
-    beams.blue1_tipV0 = rect(COLORS.H1R, V0_X, H1R_top_Y, y, y, 25, 'blue1', 'horizontal-tip');
-    beams.blue2_tipV0 = rect(COLORS.H1R, V0_X, H1R_bot_Y, y, y, 25, 'blue2', 'horizontal-tip');
+    beams.blue1_tipV0 = rect(colors.H1R, V0_X, H1R_top_Y, y, y, 25, 'blue1', 'horizontal-tip');
+    beams.blue2_tipV0 = rect(colors.H1R, V0_X, H1R_bot_Y, y, y, 25, 'blue2', 'horizontal-tip');
 
     // H1-L (紫色左腳)
-    beams.purple1 = rect(COLORS.H1L, H1L_X, H1L_top_Y, x, y, 15, 'purple1', 'horizontal');
-    beams.purple2 = rect(COLORS.H1L, H1L_X, H1L_bot_Y, x, y, 15, 'purple2', 'horizontal');
+    beams.purple1 = rect(colors.H1L, H1L_X, H1L_top_Y, x, y, 15, 'purple1', 'horizontal');
+    beams.purple2 = rect(colors.H1L, H1L_X, H1L_bot_Y, x, y, 15, 'purple2', 'horizontal');
     // Patch
-    beams.purple1_tipV0 = rect(COLORS.H1L, V0_X, H1L_top_Y, y, y, 25, 'purple1', 'horizontal-tip');
-    beams.purple2_tipV0 = rect(COLORS.H1L, V0_X, H1L_bot_Y, y, y, 25, 'purple2', 'horizontal-tip');
+    beams.purple1_tipV0 = rect(colors.H1L, V0_X, H1L_top_Y, y, y, 25, 'purple1', 'horizontal-tip');
+    beams.purple2_tipV0 = rect(colors.H1L, V0_X, H1L_bot_Y, y, y, 25, 'purple2', 'horizontal-tip');
 
     // V1 (粉紅色支點)
-    beams.pink1 = rect(COLORS.V1, V1_left_X, cy, y, x, 50, 'pink1', 'vertical');
-    beams.pink2 = rect(COLORS.V1, V1_right_X, cy, y, x, 50, 'pink2', 'vertical');
+    beams.pink1 = rect(colors.V1, V1_left_X, cy, y, x, 50, 'pink1', 'vertical');
+    beams.pink2 = rect(colors.V1, V1_right_X, cy, y, x, 50, 'pink2', 'vertical');
 
     // ===== 第二層 =====
     // V2 (橙色第二層支點)
-    beams.orange1 = rect(COLORS.V2, V2_left_X, cy, y, x, 90, 'orange1', 'vertical');
-    beams.orange2 = rect(COLORS.V2, V2_right_X, cy, y, x, 90, 'orange2', 'vertical');
+    beams.orange1 = rect(colors.V2, V2_left_X, cy, y, x, 90, 'orange1', 'vertical');
+    beams.orange2 = rect(colors.V2, V2_right_X, cy, y, x, 90, 'orange2', 'vertical');
 
     // H1 外側末端 patch (壓 V2)
-    beams.blue1_tipV2 = rect(COLORS.H1R, V2_right_X, H1R_top_Y, y, y, 100, 'blue1', 'horizontal-tip');
-    beams.blue2_tipV2 = rect(COLORS.H1R, V2_right_X, H1R_bot_Y, y, y, 100, 'blue2', 'horizontal-tip');
-    beams.purple1_tipV2 = rect(COLORS.H1L, V2_left_X, H1L_top_Y, y, y, 100, 'purple1', 'horizontal-tip');
-    beams.purple2_tipV2 = rect(COLORS.H1L, V2_left_X, H1L_bot_Y, y, y, 100, 'purple2', 'horizontal-tip');
+    beams.blue1_tipV2 = rect(colors.H1R, V2_right_X, H1R_top_Y, y, y, 100, 'blue1', 'horizontal-tip');
+    beams.blue2_tipV2 = rect(colors.H1R, V2_right_X, H1R_bot_Y, y, y, 100, 'blue2', 'horizontal-tip');
+    beams.purple1_tipV2 = rect(colors.H1L, V2_left_X, H1L_top_Y, y, y, 100, 'purple1', 'horizontal-tip');
+    beams.purple2_tipV2 = rect(colors.H1L, V2_left_X, H1L_bot_Y, y, y, 100, 'purple2', 'horizontal-tip');
 
     // H2-R (青色第二層右腳)
-    beams.cyan1 = rect(COLORS.H2R, H2R_X, H2R_top_Y, x, y, 40, 'cyan1', 'horizontal');
-    beams.cyan2 = rect(COLORS.H2R, H2R_X, H2R_bot_Y, x, y, 40, 'cyan2', 'horizontal');
+    beams.cyan1 = rect(colors.H2R, H2R_X, H2R_top_Y, x, y, 40, 'cyan1', 'horizontal');
+    beams.cyan2 = rect(colors.H2R, H2R_X, H2R_bot_Y, x, y, 40, 'cyan2', 'horizontal');
     // Patch 壓 V1
-    beams.cyan1_tipV1 = rect(COLORS.H2R, V1_right_X, H2R_top_Y, y, y, 55, 'cyan1', 'horizontal-tip');
-    beams.cyan2_tipV1 = rect(COLORS.H2R, V1_right_X, H2R_bot_Y, y, y, 55, 'cyan2', 'horizontal-tip');
+    beams.cyan1_tipV1 = rect(colors.H2R, V1_right_X, H2R_top_Y, y, y, 55, 'cyan1', 'horizontal-tip');
+    beams.cyan2_tipV1 = rect(colors.H2R, V1_right_X, H2R_bot_Y, y, y, 55, 'cyan2', 'horizontal-tip');
 
     // H2-L (黃色第二層左腳)
-    beams.yellow1 = rect(COLORS.H2L, H2L_X, H2L_top_Y, x, y, 40, 'yellow1', 'horizontal');
-    beams.yellow2 = rect(COLORS.H2L, H2L_X, H2L_bot_Y, x, y, 40, 'yellow2', 'horizontal');
+    beams.yellow1 = rect(colors.H2L, H2L_X, H2L_top_Y, x, y, 40, 'yellow1', 'horizontal');
+    beams.yellow2 = rect(colors.H2L, H2L_X, H2L_bot_Y, x, y, 40, 'yellow2', 'horizontal');
     // Patch 壓 V1
-    beams.yellow1_tipV1 = rect(COLORS.H2L, V1_left_X, H2L_top_Y, y, y, 55, 'yellow1', 'horizontal-tip');
-    beams.yellow2_tipV1 = rect(COLORS.H2L, V1_left_X, H2L_bot_Y, y, y, 55, 'yellow2', 'horizontal-tip');
+    beams.yellow1_tipV1 = rect(colors.H2L, V1_left_X, H2L_top_Y, y, y, 55, 'yellow1', 'horizontal-tip');
+    beams.yellow2_tipV1 = rect(colors.H2L, V1_left_X, H2L_bot_Y, y, y, 55, 'yellow2', 'horizontal-tip');
 
     return { beams, buildError };
 }
 
-export function getSideViewBeams(cx, cy, scale, params) {
+export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     const pxPerCm = scale * 12;
     const L = params.x * pxPerCm;
     const W = params.y * pxPerCm;
     const T = params.z * pxPerCm;
     const a = params.a * pxPerCm;
 
-    const groundY = cy + 180;
+    // Center V0 vertically at cy
+    // yV0 = cy
+    // Relationships:
+    // yH0 = yV0 + T
+    // yV1 = yH0 + T = yV0 + 2T
+    // groundY = yV1 + T/2 = yV0 + 2.5T
+    // So if yV0 is cy, then groundY = cy + 2.5 * T
+    const groundY = cy + 2.5 * T;
 
     // --- Step 1: Establish Base Coordinates (Layer 0) ---
     const effL = L - 2 * a;
@@ -266,6 +308,10 @@ export function getSideViewBeams(cx, cy, scale, params) {
 
     const H1R = { x: H1R_Center.x, y: H1R_Center.y, angle: H1_angle, w: L, h: T };
 
+    // Define Level 2 variables in outer scope so they are accessible for mechanics
+    let H2R_Center = null;
+    let H2_angle = 0;
+
     // --- Step 3: Calculate V2 (Second Layer Pivot) ---
     const V2_angle = H1_angle;
     const H1_corners = getBeamCorners(H1R);
@@ -291,14 +337,14 @@ export function getSideViewBeams(cx, cy, scale, params) {
     const dy2 = P4.y - P3.y;
     const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
     const directAngle2 = Math.atan2(dy2, dx2);
-    const H2_angle = directAngle2 + Math.asin(Math.min(1, T / dist2));
+    H2_angle = directAngle2 + Math.asin(Math.min(1, T / dist2)); // Assign to outer var
 
     const cosH2 = Math.cos(H2_angle);
     const sinH2 = Math.sin(H2_angle);
     const perpX2 = sinH2;
     const perpY2 = -cosH2;
 
-    const H2R_Center = {
+    H2R_Center = { // Assign to outer var
         x: P3.x + (distToCenter * cosH2) + (T / 2 * perpX2),
         y: P3.y + (distToCenter * sinH2) + (T / 2 * perpY2)
     };
@@ -306,12 +352,12 @@ export function getSideViewBeams(cx, cy, scale, params) {
     // --- Step 5: Output & Mirroring ---
     const beams = {
         // Layer 0
-        red1: { ...V0, color: COLORS.V0, zIndex: 100 },
-        green1: { color: COLORS.H0, x: cx, y: yH0, w: L, h: T, zIndex: 90 }, // Visual only
-        pink1: { color: COLORS.V1, x: V1_left_X, y: yV1, w: W, h: T, angle: 0, zIndex: 80 },
-        pink2: { ...V1R, color: COLORS.V1, zIndex: 80 },
+        red1: { ...V0, color: colors.V0, zIndex: 100 },
+        green1: { color: colors.H0, x: cx, y: yH0, w: L, h: T, zIndex: 90 }, // Visual only
+        pink1: { color: colors.V1, x: V1_left_X, y: yV1, w: W, h: T, angle: 0, zIndex: 80 },
+        pink2: { ...V1R, color: colors.V1, zIndex: 80 },
         // Layer 1
-        blue1: { ...H1R, color: COLORS.H1R, zIndex: 70 },
+        blue1: { ...H1R, color: colors.H1R, zIndex: 70 },
         purple1: { x: cx - (H1R.x - cx), y: H1R.y, angle: -H1R.angle, w: L, h: T, color: COLORS.H1L, zIndex: 70 },
     };
 
@@ -327,12 +373,37 @@ export function getSideViewBeams(cx, cy, scale, params) {
         beams.yellow1 = { x: cx - (H2R.x - cx), y: H2R.y, angle: -H2R.angle, w: L, h: T, color: COLORS.H2L, zIndex: 50 };
     }
 
-    // Determine which angle to report (Outermost leg)
-    const activeLegAngle = (params.L >= 2) ? H2_angle : H1_angle;
+    // Calculate True Height (Top of V0 to Lowest Point of Legs)
+    const topY = yV0 - T / 2;
+    let lowestY = groundY; // Default to center stack ground
+    let spanX_R = V1_right_X; // Default to V1 span
+
+    // Get lowest point of active legs
+    if (params.L >= 2) {
+        // H2R (and H2L) are the lowest.
+
+        // Lowest Y is center + vertical_component_of_half_diagonal
+        lowestY = H2R_Center.y + (L / 2 * Math.sin(H2_angle)) + (T / 2 * Math.cos(H2_angle));
+
+        // Span X (Outer Ground Contact)
+        spanX_R = H2R_Center.x + (L / 2 * Math.cos(H2_angle)) - (T / 2 * Math.sin(H2_angle));
+    } else {
+        // Lowest Y for H1R
+        lowestY = H1R_Center.y + (L / 2 * Math.sin(H1_angle)) + (T / 2 * Math.cos(H1_angle));
+
+        // Span X (Outer Ground Contact)
+        spanX_R = H1R_Center.x + (L / 2 * Math.cos(H1_angle)) - (T / 2 * Math.sin(H1_angle));
+    }
+
+    const trueSpan = (spanX_R - cx) * 2;
+
+    // Use the active leg angle based on layer count
+    const activeLegAngle = params.L >= 2 ? H2_angle : H1_angle;
 
     const mechanics = {
-        span: V1_span / pxPerCm,
-        angle: Math.abs(activeLegAngle * 180 / Math.PI)
+        span: trueSpan / pxPerCm,
+        angle: Math.abs(activeLegAngle * 180 / Math.PI),
+        height: (lowestY - topY) / pxPerCm
     };
 
     return { beams, mechanics };

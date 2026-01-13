@@ -1,4 +1,4 @@
-export const COLORS = {
+export const COLORS_DARK = {
     background: '#1a1d23', // Slate 900
     grid: '#334155',       // Slate 700
     text: '#94a3b8',       // Slate 400
@@ -11,6 +11,23 @@ export const COLORS = {
     H2R: '#00ced1',        // Cyan (darkturquoise)
     H2L: '#ffd700'         // Yellow (gold)
 };
+
+export const COLORS_LIGHT = {
+    background: '#f8fafc', // Slate 50
+    grid: '#cbd5e1',       // Slate 300
+    text: '#475569',       // Slate 600
+    H0: '#166534',         // Darker Green
+    V0: '#b91c1c',         // Darker Red
+    V1: '#db2777',         // Darker Pink
+    H1R: '#1d4ed8',        // Darker Blue
+    H1L: '#7e22ce',        // Darker Purple
+    V2: '#c2410c',         // Darker Orange
+    H2R: '#0f766e',        // Darker Cyan
+    H2L: '#b45309'         // Darker Yellow/Gold
+};
+
+// Default export for backward compatibility if needed, but we should use specific ones
+export const COLORS = COLORS_DARK;
 
 export const BEAM_MAP = {
     // id: { type, layer, side, colorKey }
@@ -35,11 +52,11 @@ export const INITIAL_PARAMS = {
     x: 20,      // 棍長
     y: 1.0,     // 棍寬
     z: 0.2,     // 棍厚
-    a: 4,       // 水平棍邊緣到垂直棍交叉中點的距離
-    b: 2,       // 垂直棍交叉中點到自己外緣的距離 (B = max(b1, b2...))
+    a: 2.5,     // 交叉點到水平棍距離 (原: 水平棍邊緣到垂直棍交叉中點的距離)
+    b: 2.5,     // 交叉點到垂直棍距離 (原: 垂直棍交叉中點到自己外緣的距離)
     s: 0.1,     // 相鄰水平棍間隙
     L: 2,       // 層數
-    Pmax: 5,    // 最大單邊水平容許位置
+    Pmax: 4,    // 單側水平棍容允並排排數 (原: 最大單邊水平容許位置)
     pMode: 'cis', // P 位置規則: 'cis' (往 Pmax 找) 或 'trans' (往 P1 找)
     // 舊參數別名 (相容性)
     get beamLength() { return this.x; },

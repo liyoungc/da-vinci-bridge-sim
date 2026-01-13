@@ -1,3 +1,4 @@
 .DS_Store
 start_server.sh
 .playwright-mcp/
+.vscode/

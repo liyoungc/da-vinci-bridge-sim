@@ -1,4 +1,4 @@
-import { COLORS, INITIAL_PARAMS, BUILD_STEPS, BEAM_MAP } from './constants.js';
+import { INITIAL_PARAMS, BUILD_STEPS, COLORS_DARK, COLORS_LIGHT } from './constants.js';
 import { getTopViewBeams, getSideViewBeams } from './geometry.js';
 import { Renderer } from './renderer.js';
 
@@ -89,7 +89,9 @@ function initUI() {
             state.maxLayers = parseInt(tab.dataset.layer);
             state.params.L = state.maxLayers;
             updateLayerButtons();
-            if (state.currentStep > 5 && state.maxLayers === 1) state.currentStep = 5;
+
+            // Logic Request: Reset completely when switching layers
+            state.currentStep = 0;
             updateUI();
             render();
         });
@@ -102,6 +104,12 @@ function initUI() {
             updateUI();
             render();
         }
+    });
+    document.getElementById('completeBtn').addEventListener('click', () => {
+        const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
+        state.currentStep = maxStep;
+        updateUI();
+        render();
     });
     document.getElementById('nextBtn').addEventListener('click', () => {
         const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
@@ -291,6 +299,10 @@ function render() {
     canvas.height = container.clientHeight;
     renderer.setSize(canvas.width, canvas.height);
 
+    // Theme & Colors
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const currentColors = theme === 'light' ? COLORS_LIGHT : COLORS_DARK;
+
     const cx = canvas.width / 2 + state.panX;
     const cy = canvas.height / 2 + state.panY;
     const scale = state.zoom;
@@ -299,8 +311,8 @@ function render() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Grid
-    renderer.drawGrid(state.panX, state.panY, state.zoom);
+    // Grid (Pass params for P-region styling)
+    renderer.drawGrid(state.panX, state.panY, state.zoom, state.params, state.currentView, theme);
 
     // Apply Global Rotation
     ctx.save();
@@ -313,17 +325,34 @@ function render() {
     let buildError = null;
 
     if (state.currentView === 'top') {
-        const result = getTopViewBeams(cx, cy, scale, state.params);
+        const result = getTopViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
         buildError = result.buildError; // Top View returns object {beams, buildError}
     } else {
-        const result = getSideViewBeams(cx, cy, scale, state.params);
+        const result = getSideViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
 
         // Update Stats
         if (result.mechanics) {
             document.getElementById('spanLength').textContent = result.mechanics.span.toFixed(1);
             document.getElementById('legAngle').textContent = result.mechanics.angle.toFixed(1) + '°';
+            if (result.mechanics.height !== undefined) {
+                document.getElementById('totalHeight').textContent = result.mechanics.height.toFixed(1);
+            }
+        }
+    }
+
+    // Error Sync: Check Top View for errors even if in Side View
+    // Side view physically cannot be built if Top view has overlaps/P-position failures.
+    if (!buildError && state.currentView === 'side') {
+        const topResult = getTopViewBeams(cx, cy, scale, state.params, currentColors);
+        if (topResult.buildError) {
+            buildError = topResult.buildError;
+            // Only clear beams if strictly necessary.
+            // If we clear beams, it looks "broken" if no error text is seen.
+            // But user asked "if top fails, side should not build".
+            // Let's explicitly clear beams BUT ensure error is very visible.
+            allBeams = {};
         }
     }
 
@@ -332,7 +361,7 @@ function render() {
     const visibleBeams = currentStepData.beams;
 
     Object.entries(allBeams)
-        .filter(([key]) => visibleBeams.includes(key))
+        .filter(([key, beam]) => visibleBeams.includes(key) || (beam.parent && visibleBeams.includes(beam.parent)))
         .sort(([, a], [, b]) => {
             const zA = a.zIndex ?? 0;
             const zB = b.zIndex ?? 0;
@@ -351,15 +380,17 @@ function render() {
             // Not needed for prod.
         });
 
-    // Error Message
-    if (buildError && state.currentView === 'top') {
+    // Error Message (Show in both views if error exists)
+    if (buildError) {
         ctx.fillStyle = 'rgba(255, 68, 68, 0.9)';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('⚠ 無法搭建', cx, cy - 20);
+        // Move above the bridge (shift UP significantly)
+        // Bridge is centered at cy. Move to cy - 250?
+        ctx.fillText('⚠ 無法搭建', cx, cy - 250);
         ctx.font = '14px sans-serif';
         ctx.fillStyle = 'rgba(255, 200, 200, 0.9)';
-        ctx.fillText(buildError, cx, cy + 10);
+        ctx.fillText(buildError, cx, cy - 220);
     }
 
     ctx.restore();

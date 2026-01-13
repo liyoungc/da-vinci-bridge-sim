@@ -70,13 +70,81 @@ export class Renderer {
         ctx.restore();
     }
 
-    drawGrid(panX, panY, zoom) {
+    drawGrid(panX, panY, zoom, params = null, view = 'top', theme = 'dark') {
         const { ctx, width, height } = this;
         const gridSize = 50 * zoom;
         const offsetX = panX % gridSize;
         const offsetY = panY % gridSize;
 
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-color').trim() || '#334155';
+        // Background
+        ctx.fillStyle = theme === 'light' ? '#f8fafc' : '#0a0a15';
+        ctx.fillRect(0, 0, width, height);
+
+        // P-Regions (if params exist and view is top)
+        if (params && view === 'top') {
+            const cx = width / 2 + panX;
+            const cy = height / 2 + panY;
+            const pxPerCm = zoom * 12;
+            const y = params.y * pxPerCm;
+            const s = params.s * pxPerCm;
+            // From geometry.js: H0_spacing = x - 2b
+            const b = params.b * pxPerCm;
+            const xVal = params.x * pxPerCm;
+            const H0_spacing = xVal - 2 * b;
+            const H0_top_Y = cy - H0_spacing / 2;
+            const H0_bot_Y = cy + H0_spacing / 2;
+
+            // Draw P1, P2, P3... regions
+            const regionH = y;
+            const Pmax = params.Pmax || 4;
+
+            ctx.font = `bold ${12 * zoom}px "Noto Sans TC", sans-serif`;
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            for (let p = 1; p <= Pmax; p++) {
+                // Calculate Y for top and bottom Pn
+                // geometry.js: H1_top_Y = H0_top_Y + (P - 1) * (y + s)
+                const topY = H0_top_Y + (p - 1) * (y + s);
+                const botY = H0_bot_Y - (p - 1) * (y + s); // Symmetric mirror ? No, geometry uses minus for bot Y?
+                // geometry.js: H1R_bot_Y = H0_bot_Y - (H1R_P - 1) * (y + s);
+                // Wait, H0_bot_Y is bellow cy. H beams stack downwards from H0_top and Upwards from H0_bot?
+                // Let's check geometry.js H1R_bot_Y logic.
+                // H0_bot_Y = cy + H0_spacing/2. 
+                // H1R_bot_Y = H0_bot_Y - ... 
+                // Ah, geometry.js logic: H0 is outer, H1 is inner? 
+                // Let's trust logic from geometry.js: 
+                // H1R_top_Y = H0_top_Y + (p - 1) * (y + s); 
+                // H1R_bot_Y = H0_bot_Y - (p - 1) * (y + s);
+
+                // Color bands (Faintly visible colors)
+                // Adjust alpha for Light Theme
+                const alpha = theme === 'light' ? 0.15 : 0.08;
+                const colors = [
+                    `rgba(255, 99, 71, ${alpha})`,   // P1 Red tint
+                    `rgba(65, 105, 225, ${alpha})`,  // P2 Blue tint
+                    `rgba(60, 179, 113, ${alpha})`,  // P3 Green tint
+                    `rgba(255, 165, 0, ${alpha})`,   // P4 Orange tint
+                    `rgba(147, 112, 219, ${alpha})`  // P5 Purple tint
+                ];
+                ctx.fillStyle = colors[(p - 1) % colors.length];
+
+                // Top Band
+                ctx.fillRect(0, topY - y / 2, width, y);
+                // Bot Band
+                ctx.fillRect(0, botY - y / 2, width, y);
+
+                // Labels (Outside the beam area)
+                const labelX_L = cx - (xVal) * 1.5;
+                ctx.fillStyle = theme === 'light' ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.5)';
+                ctx.fillText(`P${p}`, labelX_L, topY);
+                ctx.fillText(`P${p}`, labelX_L, botY);
+            }
+        }
+
+        // Grid Lines
+        const gridColor = theme === 'light' ? '#cbd5e1' : '#334155';
+        ctx.strokeStyle = gridColor;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
 

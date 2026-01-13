@@ -10,11 +10,50 @@
 
 這座橋樑的設計精妙之處在於無需任何釘子、繩索或黏著劑，僅靠木材之間的摩擦力和重力就能自我支撐。以下是詳細的搭建步驟分解。
 
+### 結構示意圖 (Schematic)
+
+```mermaid
+graph TD
+    subgraph Layer2 [第二層 Layer 2]
+        V2((V2 支點)) --- H2_L[H2-L 左腳]
+        V2 --- H2_R[H2-R 右腳]
+    end
+    
+    subgraph Layer1 [第一層 Layer 1]
+        V1((V1 底座)) --- H1_L[H1-L 左腳]
+        V1 --- H1_R[H1-R 右腳]
+    end
+    
+    subgraph Core [核心 Core]
+        H0[H0 橫樑] --- V0(V0 頂點)
+    end
+
+    H1_L -->|壓在| V0
+    H1_R -->|壓在| V0
+    
+    H2_L -->|壓在| V1
+    H2_R -->|壓在| V1
+    
+    V0 -->|壓在| H0
+    H0 -->|壓在| V1
+    
+    style V0 fill:#da3d3d,color:#fff
+    style H0 fill:#228b22,color:#fff
+    style V1 fill:#ffb6c1,color:#000
+    style H1_L fill:#9370db,color:#fff
+    style H1_R fill:#4169e1,color:#fff
+    style V2 fill:#ff8c00,color:#fff
+    style H2_L fill:#ffd700,color:#000
+    style H2_R fill:#00ced1,color:#000
+```
+
 ## 定義與參數設定
 
 ### 幾何定義 (Definitions)
 
 此部分為可讓使用者調整的基礎數值。
+
+> **注意**：本模擬器預設使用**長寬高規格一致的方棍**（Square Beams），所有物理計算皆基於此假設。
 
 | 符號 | 說明 |
 | :---- | :---- |

@@ -536,7 +536,7 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
 
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
         }
 
@@ -545,6 +545,7 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
             padding: 0.5rem;
             border-radius: 6px;
             text-align: center;
+            min-width: 80px;
         }
 
         .stat-value {
@@ -698,9 +699,12 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                         <button class="rotate-btn" id="rotateBtn" title="旋轉 90°">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
-                                <rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="4 2" />
-                                <path d="M12 2v3" />
-                                <path d="M9 5l3-3 3 3" />
+                                <!-- L-shaped arrow for rotate -->
+                                <path d="M20 4L12 12L4 4" stroke-width="0" fill="none" /> <!-- Spacer/Box ref -->
+                                <path d="M19 5 L19 12 A 4 4 0 0 1 15 16 L5 16" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M8 13 L5 16 L8 19" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                         </button>
                     </div>
@@ -819,20 +823,22 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                     </div>
 
                     <div class="param-group">
-                        <label class="param-label">a 水平棍邊緣距 <span id="aVal"
-                                style="color:var(--accent-light)">2</span></label>
+                        <label class="param-label">交叉點到水平棍 <span id="aVal"
+                                style="color:var(--accent-light)">2.5</span></label>
                         <div class="param-input-group">
-                            <input type="range" id="aSlider" value="2" min="1" max="5" step="0.5">
-                            <input type="number" class="param-number" id="aInput" value="2" min="1" max="5" step="0.5">
+                            <input type="range" id="aSlider" value="2.5" min="0" max="10" step="0.5">
+                            <input type="number" class="param-number" id="aInput" value="2.5" min="0" max="10"
+                                step="0.5">
                         </div>
                     </div>
 
                     <div class="param-group">
-                        <label class="param-label">b 垂直棍邊緣距 <span id="bVal"
-                                style="color:var(--accent-light)">2</span></label>
+                        <label class="param-label">交叉點到垂直棍 <span id="bVal"
+                                style="color:var(--accent-light)">2.5</span></label>
                         <div class="param-input-group">
-                            <input type="range" id="bSlider" value="2" min="1" max="5" step="0.5">
-                            <input type="number" class="param-number" id="bInput" value="2" min="1" max="5" step="0.5">
+                            <input type="range" id="bSlider" value="2.5" min="0" max="10" step="0.5">
+                            <input type="number" class="param-number" id="bInput" value="2.5" min="0" max="10"
+                                step="0.5">
                         </div>
                     </div>
 
@@ -847,11 +853,11 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                     </div>
 
                     <div class="param-group">
-                        <label class="param-label">Pmax 單邊最大 P 位置 <span id="pmaxVal"
-                                style="color:var(--accent-light)">5</span></label>
+                        <label class="param-label">單側水平棍容允並排排數 <span id="PmaxVal"
+                                style="color:var(--accent-light)">4</span></label>
                         <div class="param-input-group">
-                            <input type="range" id="pmaxSlider" value="5" min="3" max="8" step="1">
-                            <input type="number" class="param-number" id="pmaxInput" value="5" min="3" max="8" step="1">
+                            <input type="range" id="PmaxSlider" value="4" min="3" max="8" step="1">
+                            <input type="number" class="param-number" id="PmaxInput" value="4" min="3" max="8">
                         </div>
                     </div>
 
@@ -883,6 +889,10 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                         <div class="stat-card">
                             <div class="stat-value" id="legAngle">0°</div>
                             <div class="stat-label">底角</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalHeight">-</div>
+                            <div class="stat-label">高度 (cm)</div>
                         </div>
                     </div>
                 </div>
