@@ -125,8 +125,18 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
         }
 
         .subtitle {
-            color: var(--text-secondary);
             font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtitle:hover {
+            color: var(--accent-light);
+            text-decoration: underline;
+            text-underline-offset: 4px;
         }
 
         .main-content {
@@ -324,6 +334,7 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
 
         input[type="range"] {
             -webkit-appearance: none;
+            appearance: none;
             background: transparent;
             cursor: pointer;
             width: 100%;
@@ -339,6 +350,7 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             height: 18px;
             width: 18px;
             border-radius: 50%;
@@ -656,6 +668,44 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                 min-width: 45%;
             }
         }
+
+
+        footer {
+            margin-top: 3rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 
@@ -666,7 +716,10 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
         </button>
         <header>
             <h1>達文西橋搭建模擬器</h1>
-            <p class="subtitle">Leonardo da Vinci's Self-Supporting Bridge</p>
+            <a href="https://github.com/liyoungc/da-vinci-bridge-sim/tree/main" target="_blank"
+                rel="noopener noreferrer" class="subtitle">
+                搭建方式和參數說明
+            </a>
         </header>
 
         <div class="main-content">
@@ -925,6 +978,10 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                 </div>
             </div>
         </div>
+
+        <footer>
+            <p>Copyright ( by Li-yang Chen )</p>
+        </footer>
     </div>
 
     <script type="module" src="js/main.js"></script>
