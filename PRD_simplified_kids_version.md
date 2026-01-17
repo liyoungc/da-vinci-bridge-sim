@@ -1,9 +1,9 @@
 # 達文西橋模擬器 - 兒童簡化版 PRD
 ## Product Requirements Document
 
-**版本**: 1.1
+**版本**: 1.2
 **日期**: 2026-01-17
-**更新內容**: 加入參考設計、中文化命名、Ralph Loop 開發流程
+**更新內容**: 加入飛入動畫詳細設計、確認不影響原網站
 **目標用戶**: 6-12 歲兒童及其家長
 **項目狀態**: 待開發
 
@@ -178,10 +178,121 @@ const SIMPLIFIED_PARAMS = {
 - 字體: 更大的字號（基準 18px）
 
 **動畫效果**:
-- 切換步驟時，新木棍淡入動畫（300ms）
-- 參數調整時，畫布平滑過渡（150ms）
-- 按鈕懸停時放大 1.05 倍
-- 完成步驟時，顯示慶祝動畫 🎉
+
+##### 1. 木棍飛入動畫（核心特色）
+當切換到新步驟時，新出現的木棍會以**飛入動畫**的方式進入畫面：
+
+**動畫類型 A：垂直木棍（V0, V1）飛入**
+- 效果：從畫面上方飛入，落到目標位置
+- 動畫時長：600ms
+- 緩動函數：`cubic-bezier(0.34, 1.56, 0.64, 1)` (彈跳效果)
+- 軌跡：
+  ```
+  起始位置：目標 Y 座標 - 200px（畫面上方）
+  結束位置：目標 Y 座標
+  透明度：0 → 1
+  旋轉：-10° → 0° (輕微旋轉增加動感)
+  ```
+
+**動畫類型 B：橫向木棍（H0, H1）飛入**
+- 效果：從對應側邊飛入，滑到目標位置
+- 動畫時長：600ms
+- 緩動函數：`cubic-bezier(0.34, 1.56, 0.64, 1)` (彈跳效果)
+- 軌跡：
+  ```
+  H1-R (右側腿部)：從右側飛入
+    起始位置：目標 X 座標 + 300px
+    結束位置：目標 X 座標
+
+  H1-L (左側腿部)：從左側飛入
+    起始位置：目標 X 座標 - 300px
+    結束位置：目標 X 座標
+
+  H0 (主樑)：從左右兩側同時飛入（上下兩根）
+    上橫：從左側飛入
+    下橫：從右側飛入
+
+  透明度：0 → 1
+  旋轉：5° → 0° (輕微旋轉)
+  ```
+
+**動畫順序（Stagger）**：
+- 同一步驟內如有多根木棍，依序飛入（間隔 150ms）
+- 例如步驟 1（放置支撐）：左直一飛入 → 150ms → 右直一飛入
+- 例如步驟 2（橫放主樑）：上橫飛入 → 150ms → 下橫飛入
+
+**音效搭配（可選）**：
+- 木棍飛入時：輕快的「咻」聲（whoosh sound）
+- 木棍落定時：清脆的「噠」聲（tap sound）
+- 音效音量：30%（不干擾）
+- 可在設置中開關音效
+
+**技術實現**：
+```javascript
+// 使用 CSS animations + JavaScript 控制
+@keyframes flyInFromTop {
+  0% {
+    transform: translateY(-200px) rotate(-10deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes flyInFromRight {
+  0% {
+    transform: translateX(300px) rotate(5deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+// 或使用 Canvas 原生動畫
+function animateBeamEntry(beam, fromDirection) {
+  const startTime = Date.now();
+  const duration = 600;
+
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutBounce(progress);
+
+    // 計算當前位置和透明度
+    const currentX = lerp(startX, targetX, eased);
+    const currentY = lerp(startY, targetY, eased);
+    const currentOpacity = eased;
+    const currentRotation = lerp(startRotation, 0, eased);
+
+    // 繪製
+    drawBeam(beam, currentX, currentY, currentOpacity, currentRotation);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      playTapSound(); // 落定音效
+    }
+  }
+
+  playWhooshSound(); // 飛入音效
+  animate();
+}
+```
+
+##### 2. 其他動畫效果
+- **參數調整動畫**：畫布平滑過渡（150ms，`ease-out`）
+- **按鈕懸停動畫**：放大 1.05 倍 + 輕微上浮（200ms）
+- **完成慶祝動畫**：
+  - 五彩紙屑從上方灑落（2 秒）
+  - 「完成！」文字彈出並放大（500ms）
+  - 所有木棍輕微彈跳（300ms，依序觸發）
+- **步驟進度圓點動畫**：
+  - 當前步驟：脈衝放大效果（1s 循環）
+  - 完成步驟：✓ 打勾動畫（300ms）
 
 ---
 
@@ -323,23 +434,42 @@ const SIMPLIFIED_PARAMS = {
 
 ### 5.1 檔案結構
 
+**🔒 重要說明：完全不影響原網站**
+
+兒童版採用**完全獨立**的文件結構，確保原網站（index.html）不受任何影響：
+
 ```
 da-vinci-bridge-sim/
-├── index.html                          # 現有完整版
-├── kids.html                          # 🆕 兒童簡化版入口
-├── css/
-│   └── kids.css                       # 🆕 兒童版專用樣式
+│
+├── index.html                          # ✅ 原網站（不動）
 ├── js/
-│   ├── main.js                        # 現有（完整版）
-│   ├── kids-main.js                   # 🆕 兒童版主邏輯
-│   ├── constants.js                   # 複用（部分修改）
-│   ├── kids-constants.js              # 🆕 簡化版常量
-│   ├── geometry.js                    # 複用（無需修改）
-│   └── renderer.js                    # 複用（無需修改）
+│   ├── main.js                        # ✅ 原邏輯（不動）
+│   ├── constants.js                   # ✅ 原常量（不動）
+│   ├── geometry.js                    # ✅ 共用工具（只讀取，不修改）
+│   └── renderer.js                    # ✅ 共用工具（只讀取，不修改）
+│
+├── kids.html                          # 🆕 兒童版入口（新建）
+├── css/
+│   └── kids.css                       # 🆕 兒童版樣式（新建）
+├── js/
+│   ├── kids-main.js                   # 🆕 兒童版主邏輯（新建）
+│   └── kids-constants.js              # 🆕 兒童版常量（新建）
+│
 ├── README.md                          # 現有文檔
 ├── README_KIDS.md                     # 🆕 兒童版說明
 └── PRD_simplified_kids_version.md     # 🆕 本 PRD 文件
 ```
+
+**檔案獨立性保證**：
+1. ✅ **獨立 HTML**：kids.html 是全新文件，不修改 index.html
+2. ✅ **獨立 JavaScript**：kids-main.js 和 kids-constants.js 是新文件
+3. ✅ **獨立 CSS**：kids.css 是新文件，不影響原有樣式
+4. ✅ **只讀共用**：geometry.js 和 renderer.js 只被讀取使用，不做任何修改
+5. ✅ **分離部署**：可選擇性部署兒童版，不影響原網站運行
+
+**訪問方式**：
+- 原網站：`https://liyoungc.github.io/da-vinci-bridge-sim/` (不變)
+- 兒童版：`https://liyoungc.github.io/da-vinci-bridge-sim/kids.html` (新增)
 
 ### 5.2 開發階段
 
@@ -587,7 +717,19 @@ da-vinci-bridge-sim/
 - [ ] 修改 `render()` 只調用 `getTopViewBeams()`
 - [ ] 簡化事件監聽器（移除視圖切換、旋轉等）
 - [ ] 調整自動播放間隔為 2 秒
-- [ ] 添加完成動畫
+- [ ] **實現飛入動畫系統**：
+  - [ ] 創建 `animateBeamEntry()` 函數處理木棍飛入
+  - [ ] 實現緩動函數（easeOutBounce）
+  - [ ] 為垂直木棍添加「從上方飛入」動畫
+  - [ ] 為橫向木棍添加「從側邊飛入」動畫
+  - [ ] 實現動畫順序（stagger）效果
+  - [ ] 添加動畫狀態管理（防止衝突）
+- [ ] **音效系統（可選）**：
+  - [ ] 添加音效開關設置
+  - [ ] 實現 whoosh 音效（飛入時）
+  - [ ] 實現 tap 音效（落定時）
+  - [ ] 控制音效音量為 30%
+- [ ] 添加完成慶祝動畫（紙屑、彈跳）
 
 #### Constants (`kids-constants.js`)
 - [ ] 定義 `SIMPLIFIED_PARAMS` 配置
@@ -601,20 +743,43 @@ da-vinci-bridge-sim/
 - [ ] 增大基礎字體（18px）
 - [ ] 增大按鈕尺寸（最小 44x44px）
 - [ ] 增大滑桿尺寸（手柄 24px）
-- [ ] 添加按鈕懸停動畫（scale 1.05）
+- [ ] 添加按鈕懸停動畫（scale 1.05 + 上浮）
 - [ ] 優化色彩飽和度（+10%）
-- [ ] 添加步驟切換淡入動畫
+- [ ] **飛入動畫關鍵幀**：
+  - [ ] 定義 `@keyframes flyInFromTop`（垂直木棍）
+  - [ ] 定義 `@keyframes flyInFromLeft`（左側飛入）
+  - [ ] 定義 `@keyframes flyInFromRight`（右側飛入）
+  - [ ] 設置彈跳緩動函數 `cubic-bezier(0.34, 1.56, 0.64, 1)`
+- [ ] **進度圓點動畫**：
+  - [ ] 當前步驟脈衝效果 `@keyframes pulse`
+  - [ ] 完成步驟打勾動畫 `@keyframes checkmark`
 - [ ] 實現響應式佈局斷點
-- [ ] 添加完成慶祝動畫樣式
+- [ ] **完成慶祝動畫樣式**：
+  - [ ] 紙屑灑落動畫 `@keyframes confetti`
+  - [ ] 文字彈出動畫 `@keyframes popIn`
+  - [ ] 木棍彈跳動畫 `@keyframes bounce`
 
 #### Testing
 - [ ] 測試所有參數組合（邊界值）
 - [ ] 測試步驟導航（前進、後退、自動播放）
+- [ ] **飛入動畫測試**：
+  - [ ] 測試每個步驟的木棍飛入效果是否正確
+  - [ ] 測試垂直木棍從上方飛入的軌跡和速度
+  - [ ] 測試橫向木棍從側邊飛入的軌跡和速度
+  - [ ] 測試動畫順序（stagger）效果
+  - [ ] 測試快速切換步驟時動畫是否衝突
+  - [ ] 測試音效播放（如已實現）
+  - [ ] 測試完成慶祝動畫（紙屑、彈跳）
+  - [ ] 驗證動畫在不同設備上的流暢度（> 30 FPS）
 - [ ] 測試縮放和平移功能
 - [ ] 測試觸控設備（iPad、Android 平板）
 - [ ] 測試不同螢幕尺寸（768px, 480px, 320px）
 - [ ] 測試瀏覽器兼容性（Chrome, Firefox, Safari, Edge）
 - [ ] 進行兒童用戶測試（觀察理解度和互動方式）
+- [ ] **動畫性能測試**：
+  - [ ] 使用 Chrome DevTools Performance 檢查幀率
+  - [ ] 確保動畫不造成記憶體洩漏
+  - [ ] 測試低階設備上的動畫效果
 
 ---
 
@@ -630,6 +795,21 @@ da-vinci-bridge-sim/
 
 ## 更新歷史
 
+### Version 1.2 (2026-01-17)
+- ✅ **大幅增強「F5: 視覺設計優化」動畫效果**：
+  - 新增詳細的木棍飛入動畫設計（垂直、橫向兩種類型）
+  - 定義動畫參數（600ms、彈跳緩動、旋轉效果）
+  - 添加動畫順序（stagger）機制
+  - 設計可選音效系統（whoosh + tap）
+  - 提供完整的技術實現代碼範例
+- ✅ **更新實現檢查清單**：
+  - JavaScript: 新增飛入動畫系統和音效系統檢查項
+  - CSS: 新增飛入動畫關鍵幀和慶祝動畫檢查項
+  - Testing: 新增飛入動畫測試和性能測試檢查項
+- ✅ **確認架構獨立性**：
+  - 明確說明兒童版使用獨立文件，不影響原網站
+  - 檔案結構完全分離（kids.html, kids-main.js, kids.css）
+
 ### Version 1.1 (2026-01-17)
 - ✅ 新增「1.4 參考設計」章節，說明目標視覺效果
 - ✅ 更新「4.2 色彩編碼」，加入中文化命名方案（左直一、右橫一等）
@@ -642,4 +822,4 @@ da-vinci-bridge-sim/
 
 ---
 
-**文件結尾** | Version 1.1 | 2026-01-17
+**文件結尾** | Version 1.2 | 2026-01-17
