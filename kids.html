@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🏗️ 達文西橋搭建遊戲（兒童版）</title>
+    <link rel="stylesheet" href="css/kids.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- 頁首 -->
+        <header class="header">
+            <h1 class="title">🏗️ 達文西橋搭建遊戲</h1>
+            <p class="subtitle">讓我們一起搭建神奇的木棍橋樑！</p>
+        </header>
+
+        <!-- 主要內容區 -->
+        <main class="main-content">
+            <!-- 畫布區域 -->
+            <section class="canvas-section">
+                <div class="canvas-wrapper">
+                    <canvas id="bridgeCanvas"></canvas>
+                    <div id="errorMessage" class="error-message" style="display: none;"></div>
+                </div>
+
+                <!-- 步驟資訊 -->
+                <div class="step-info">
+                    <h2 class="step-title" id="stepTitle">🎯 準備開始</h2>
+                    <p class="step-description" id="stepDescription">歡迎來到達文西橋搭建遊戲！</p>
+
+                    <!-- 進度圓點 -->
+                    <div class="progress-dots" id="progressDots">
+                        <span class="dot active" data-step="0">1</span>
+                        <span class="dot" data-step="1">2</span>
+                        <span class="dot" data-step="2">3</span>
+                        <span class="dot" data-step="3">4</span>
+                        <span class="dot" data-step="4">5</span>
+                        <span class="dot" data-step="5">6</span>
+                    </div>
+                </div>
+
+                <!-- 控制按鈕 -->
+                <div class="controls">
+                    <button id="prevBtn" class="btn btn-secondary">⬅️ 上一步</button>
+                    <button id="autoBtn" class="btn btn-primary">🎬 自動播放</button>
+                    <button id="nextBtn" class="btn btn-secondary">下一步 ➡️</button>
+                </div>
+
+                <!-- 視圖控制 -->
+                <div class="view-controls">
+                    <button id="resetViewBtn" class="btn btn-small">🔄 重置視圖</button>
+                    <div class="zoom-control">
+                        <label for="zoomSlider">🔍 縮放：</label>
+                        <input type="range" id="zoomSlider" min="0.8" max="3" step="0.1" value="1">
+                        <span id="zoomValue">100%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 參數控制區 -->
+            <section class="params-section">
+                <h3 class="section-title">🎮 調整參數</h3>
+
+                <!-- 參數 1: 木棍長度 -->
+                <div class="param-card">
+                    <div class="param-header">
+                        <span class="param-icon">📏</span>
+                        <span class="param-label">木棍長度</span>
+                        <span class="param-value" id="valueX">20 cm</span>
+                    </div>
+                    <input type="range" id="paramX" class="param-slider"
+                           min="15" max="25" step="1" value="20">
+                    <p class="param-hint">調整木棍有多長</p>
+                </div>
+
+                <!-- 參數 2: 橫向重疊 -->
+                <div class="param-card">
+                    <div class="param-header">
+                        <span class="param-icon">↔️</span>
+                        <span class="param-label">橫向重疊</span>
+                        <span class="param-value" id="valueA">2.5 cm</span>
+                    </div>
+                    <input type="range" id="paramA" class="param-slider"
+                           min="1" max="5" step="0.5" value="2.5">
+                    <p class="param-hint">木棍左右交叉的位置</p>
+                </div>
+
+                <!-- 參數 3: 縱向重疊 -->
+                <div class="param-card">
+                    <div class="param-header">
+                        <span class="param-icon">↕️</span>
+                        <span class="param-label">縱向重疊</span>
+                        <span class="param-value" id="valueB">2.5 cm</span>
+                    </div>
+                    <input type="range" id="paramB" class="param-slider"
+                           min="1" max="5" step="0.5" value="2.5">
+                    <p class="param-hint">木棍上下交叉的位置</p>
+                </div>
+
+                <!-- 重置按鈕 -->
+                <button id="resetParamsBtn" class="btn btn-reset">🔄 恢復預設值</button>
+            </section>
+        </main>
+
+        <!-- 頁尾 -->
+        <footer class="footer">
+            <p>© 2026 達文西橋模擬器 | <a href="index.html">完整版</a></p>
+        </footer>
+    </div>
+
+    <!-- 完成慶祝動畫 -->
+    <div id="celebration" class="celebration" style="display: none;">
+        <div class="celebration-content">
+            <h2 class="celebration-title">🎉 完成！</h2>
+            <p class="celebration-text">你成功搭建了達文西橋！</p>
+        </div>
+        <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+    </div>
+
+    <!-- JavaScript 模組 -->
+    <script type="module" src="js/kids-main.js"></script>
+</body>
+
+</html>
