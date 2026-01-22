@@ -131,7 +131,7 @@ export class BridgeBuilder {
      * Core structure: V0 (apex), H0 (core horizontal), V1 (pivots), H1 (legs)
      */
     public buildLayer1Bridge(): void {
-        const { x, z, a, b } = this.params;
+        const { x, y, z, a, b } = this.params;
         const s = this.scale;
 
         // All coordinates in 3D space (Y is up, X is right, Z is front)
@@ -144,8 +144,8 @@ export class BridgeBuilder {
         // Stack height (vertical offset from V0 to V1)
         const stackHeight = 2 * z * s;
 
-        // V1 Y position (on the ground, with half-thickness offset)
-        const V1_Y = z * s / 2;
+        // V1 Y position: vertical beams are rotated 90° around Z, so world Y half-extent is y * s / 2
+        const V1_Y = (y * s) / 2;
 
         // V0 Y position (at apex)
         const V0_Y = V1_Y + stackHeight;
