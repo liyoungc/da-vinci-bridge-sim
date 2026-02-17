@@ -74,8 +74,8 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     const x = params.x * pxPerCm;     // 棍長
     const y = params.y * pxPerCm;     // 棍寬
-    const a = params.a * pxPerCm;     // 水平棍邊緣到垂直棍交叉中點的距離
-    const b = params.b * pxPerCm;     // 垂直棍交叉中點到自己外緣的距離
+    const a = (params.h + params.y / 2) * pxPerCm;  // 交叉點到水平棍邊緣 = h + y/2
+    const b = (params.v + params.y / 2) * pxPerCm;  // 交叉點到垂直棍邊緣 = v + y/2
     const s = params.s * pxPerCm;     // 間隙
 
     // ===== 幾何計算 =====
@@ -124,9 +124,8 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     // Helper: Simple 1D overlap check (Moved up for H2-R usage)
     // "Real world" check: Do the beams physically collide in this P-slot?
-    // Tolerance: allow up to 1cm overlap without blocking
-    const OVERLAP_TOLERANCE_CM = 1;
-    const tolerancePx = OVERLAP_TOLERANCE_CM * pxPerCm;
+    // Tolerance: allow up to N cm overlap without blocking (adjustable)
+    const tolerancePx = (params.tolerance || 1) * pxPerCm;
     const checkOverlap = (centerA, centerB, len) => {
         // Only block if overlap exceeds 1cm tolerance
         return Math.abs(centerA - centerB) < (len - tolerancePx);
@@ -295,7 +294,7 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     const L = params.x * pxPerCm;
     const W = params.y * pxPerCm;
     const T = params.z * pxPerCm;
-    const a = params.a * pxPerCm;
+    const a = (params.h + params.y / 2) * pxPerCm;  // a = h + y/2
 
     // Center V0 vertically at cy
     // yV0 = cy

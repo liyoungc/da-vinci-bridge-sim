@@ -52,9 +52,10 @@ export const INITIAL_PARAMS = {
     x: 20,      // 棍長 (x)
     y: 1.0,     // 棍寬 (y)
     z: 0.2,     // 棍厚 (z)
-    a: 2.5,     // 交叉點到水平棍邊緣 (a)
-    b: 2.5,     // 交叉點到垂直棍邊緣 (b)
+    h: 2.5,     // 水平接點 (h; 水平棍緣露出) → 程式用 a = h + y/2
+    v: 2.5,     // 垂直接點 (v; 垂直棍緣露出) → 程式用 b = v + y/2
     s: 0.1,     // 間隙 (s)
+    tolerance: 1.0, // 容忍度 (cm)，重疊超過此值才算碰撞
     L: 2,       // 層數
     Pmax: 4,    // 單側水平棍容許最多排數 (Pmax)
     pMode: 'cis', // P 位置規則: 'cis' (往 Pmax 找) 或 'trans' (往 P1 找)
@@ -62,7 +63,7 @@ export const INITIAL_PARAMS = {
     get beamLength() { return this.x; },
     get beamWidth() { return this.y; },
     get beamThick() { return this.z; },
-    get overlap() { return this.a; },
+    get overlap() { return this.h + this.y / 2; },
     get gap() { return this.s; }
 };
 
@@ -79,14 +80,14 @@ export const BUILD_STEPS = [
     {
         beams: ['pink1', 'pink2'],
         title: '【第一階段】步驟 1：設置底座 (V1)',
-        description: 'V1：兩根垂直棍平行放置，間距 = x - 2a，作為第一層支點。',
+        description: 'V1：兩根垂直棍平行放置，間距 = x - 2(h+y/2)，作為第一層支點。',
         activeBeams: ['pink'],
         phase: 1
     },
     {
         beams: ['pink1', 'pink2', 'green1', 'green2'],
         title: '【第一階段】步驟 2：架設橫樑 (H0)',
-        description: 'H0：水平橫跨在 V1 上，交叉點距離 H0 邊緣為 b。',
+        description: 'H0：水平橫跨在 V1 上，交叉點距離 H0 邊緣為 v+y/2。',
         activeBeams: ['green'],
         phase: 1
     },

@@ -116,7 +116,7 @@ export class Renderer {
             const y = params.y * pxPerCm;
             const s = params.s * pxPerCm;
             // From geometry.js: H0_spacing = x - 2b
-            const b = params.b * pxPerCm;
+            const b = (params.v + params.y / 2) * pxPerCm;  // b = v + y/2
             const xVal = params.x * pxPerCm;
             const H0_spacing = xVal - 2 * b;
             const H0_top_Y = cy - H0_spacing / 2;
