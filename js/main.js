@@ -2,12 +2,17 @@ import { INITIAL_PARAMS, BUILD_STEPS, COLORS_DARK, COLORS_LIGHT } from './consta
 import { getTopViewBeams, getSideViewBeams } from './geometry.js';
 import { Renderer } from './renderer.js';
 
+// Helper: compute max step from layer count
+function getMaxStep(layers) {
+    return layers === 1 ? 5 : BUILD_STEPS.length - 1;
+}
+
 // Application State
 const state = {
     params: { ...INITIAL_PARAMS },
     currentStep: 0,
     currentView: 'top',
-    maxLayers: 1,
+    maxLayers: 2,
     zoom: 1,
     panX: 0,
     panY: 0,
@@ -106,13 +111,13 @@ function initUI() {
         }
     });
     document.getElementById('completeBtn').addEventListener('click', () => {
-        const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
+        const maxStep = getMaxStep(state.maxLayers);
         state.currentStep = maxStep;
         updateUI();
         render();
     });
     document.getElementById('nextBtn').addEventListener('click', () => {
-        const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
+        const maxStep = getMaxStep(state.maxLayers);
         if (state.currentStep < maxStep) {
             state.currentStep++;
             updateUI();
@@ -135,6 +140,10 @@ function initUI() {
 
     // Theme
     initTheme();
+
+    // Default to completed view
+    state.currentStep = getMaxStep(state.maxLayers);
+
     updateUI();
     updateLayerButtons();
     updateViewButtons();
@@ -194,7 +203,7 @@ function toggleAutoPlay() {
     if (state.isAutoPlaying) {
         btn.textContent = '⏹ 停止';
         btn.classList.add('active');
-        const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
+        const maxStep = getMaxStep(state.maxLayers);
         state.autoPlayInterval = setInterval(() => {
             if (state.currentStep < maxStep) {
                 state.currentStep++;
@@ -222,7 +231,7 @@ function resetView() {
 
 function updateUI() {
     const step = BUILD_STEPS[state.currentStep];
-    const maxStep = state.maxLayers === 1 ? 5 : BUILD_STEPS.length - 1;
+    const maxStep = getMaxStep(state.maxLayers);
 
     document.getElementById('stepLabel').textContent = `${state.currentStep} / ${maxStep}`;
     document.getElementById('descTitle').textContent = step.title;
@@ -323,11 +332,13 @@ function render() {
     // Calculate Beams
     let allBeams;
     let buildError = null;
+    let overlapHighlights = [];
 
     if (state.currentView === 'top') {
         const result = getTopViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
-        buildError = result.buildError; // Top View returns object {beams, buildError}
+        buildError = result.buildError;
+        overlapHighlights = result.overlapHighlights || [];
     } else {
         const result = getSideViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
@@ -379,6 +390,18 @@ function render() {
             // if (key === 'H2L-top') renderer.drawArrow(beam, 'H2L'); 
             // Not needed for prod.
         });
+
+    // Draw overlap highlights (only for top view, only if related beams are visible)
+    if (state.currentView === 'top' && overlapHighlights.length > 0) {
+        for (const highlight of overlapHighlights) {
+            const bothVisible = highlight.relatedBeams.every(
+                bk => visibleBeams.includes(bk) || visibleBeams.some(vb => allBeams[vb]?.parent === bk)
+            );
+            if (bothVisible) {
+                renderer.drawOverlapHighlight(highlight);
+            }
+        }
+    }
 
     // Error Message (Show in both views if error exists)
     if (buildError) {

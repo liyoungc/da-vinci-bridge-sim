@@ -70,6 +70,34 @@ export class Renderer {
         ctx.restore();
     }
 
+    drawOverlapHighlight(highlight) {
+        const { ctx } = this;
+        // Draw for both top and bottom Y positions
+        for (const y of [highlight.topY, highlight.botY]) {
+            ctx.save();
+            // Red glow circle
+            const radius = Math.max(highlight.width * 0.8, 14);
+            const gradient = ctx.createRadialGradient(highlight.x, y, 0, highlight.x, y, radius);
+            gradient.addColorStop(0, 'rgba(255, 40, 40, 0.55)');
+            gradient.addColorStop(0.5, 'rgba(255, 40, 40, 0.25)');
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(highlight.x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Label
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 4;
+            ctx.fillStyle = '#ff4444';
+            ctx.font = 'bold 10px "Noto Sans TC", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(`\u91CD\u758A ${highlight.amountMm} mm`, highlight.x, y - radius - 2);
+            ctx.restore();
+        }
+    }
+
     drawGrid(panX, panY, zoom, params = null, view = 'top', theme = 'dark') {
         const { ctx, width, height } = this;
         const gridSize = 50 * zoom;
