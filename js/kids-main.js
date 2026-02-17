@@ -237,8 +237,8 @@ function updateUI() {
 
     // 更新參數顯示
     document.getElementById('valueX').textContent = `${state.params.x} cm`;
-    document.getElementById('valueA').textContent = `${state.params.a} cm`;
-    document.getElementById('valueB').textContent = `${state.params.b} cm`;
+    document.getElementById('valueH').textContent = `${state.params.h} cm`;
+    document.getElementById('valueV').textContent = `${state.params.v} cm`;
 
     // 更新縮放顯示
     document.getElementById('zoomValue').textContent = `${Math.round(state.zoom * 100)}%`;
@@ -367,14 +367,14 @@ function setupEventListeners() {
         render();
     });
 
-    document.getElementById('paramA').addEventListener('input', (e) => {
-        state.params.a = parseFloat(e.target.value);
+    document.getElementById('paramH').addEventListener('input', (e) => {
+        state.params.h = parseFloat(e.target.value);
         updateUI();
         render();
     });
 
-    document.getElementById('paramB').addEventListener('input', (e) => {
-        state.params.b = parseFloat(e.target.value);
+    document.getElementById('paramV').addEventListener('input', (e) => {
+        state.params.v = parseFloat(e.target.value);
         updateUI();
         render();
     });
@@ -383,8 +383,8 @@ function setupEventListeners() {
     document.getElementById('resetParamsBtn').addEventListener('click', () => {
         state.params = { ...INITIAL_PARAMS };
         document.getElementById('paramX').value = INITIAL_PARAMS.x;
-        document.getElementById('paramA').value = INITIAL_PARAMS.a;
-        document.getElementById('paramB').value = INITIAL_PARAMS.b;
+        document.getElementById('paramH').value = INITIAL_PARAMS.h;
+        document.getElementById('paramV').value = INITIAL_PARAMS.v;
         updateUI();
         render();
     });

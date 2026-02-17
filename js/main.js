@@ -33,7 +33,7 @@ const renderer = new Renderer(canvas, ctx);
 // Setup UI Controls
 function initUI() {
     // Sliders
-    ['x', 'y', 'z', 'a', 'b', 's', 'Pmax'].forEach(key => {
+    ['x', 'y', 'z', 'h', 'v', 's', 'Pmax', 'tolerance'].forEach(key => {
         const slider = document.getElementById(key + 'Slider');
         const valDisplay = document.getElementById(key + 'Val');
         const numberInput = document.getElementById(key + 'Input');
@@ -153,7 +153,7 @@ function initTheme() {
     const themeBtn = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const root = document.documentElement;
-    let currentTheme = localStorage.getItem('theme') || 'dark';
+    let currentTheme = localStorage.getItem('theme') || 'light';
 
     function applyTheme(theme) {
         if (theme === 'system') {

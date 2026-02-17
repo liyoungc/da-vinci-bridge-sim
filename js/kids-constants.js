@@ -29,17 +29,18 @@ export const BEAM_NAMES = {
     'H1L-bot': '左橫一下'    // 左邊支撐腿（下）
 };
 
-// 簡化版參數配置（只有 x, a, b）
+// 簡化版參數配置（只有 x, h, v）
 export const SIMPLIFIED_PARAMS = {
     // 可調參數
     x: { min: 15, max: 25, default: 20, step: 1, label: '📏 木棍長度', hint: '調整木棍有多長', unit: 'cm' },
-    a: { min: 1, max: 5, default: 2.5, step: 0.5, label: '↔️ 橫向重疊', hint: '木棍左右交叉的位置', unit: 'cm' },
-    b: { min: 1, max: 5, default: 2.5, step: 0.5, label: '↕️ 縱向重疊', hint: '木棍上下交叉的位置', unit: 'cm' },
+    h: { min: 1, max: 5, default: 2, step: 0.5, label: '↔️ 水平接點', hint: '水平棍緣露出的距離', unit: 'cm' },
+    v: { min: 1, max: 5, default: 2, step: 0.5, label: '↕️ 垂直接點', hint: '垂直棍緣露出的距離', unit: 'cm' },
 
     // 固定參數（不顯示給用戶）
     y: 1.0,          // 棍寬固定
     z: 0.2,          // 棍厚固定
     s: 0.1,          // 間隙固定
+    tolerance: 1.0,  // 容忍度固定
     Pmax: 4,         // 位置數固定
     L: 1,            // 層數固定為 1（單層）
     pMode: 'cis'     // P模式固定
@@ -50,9 +51,10 @@ export const INITIAL_PARAMS = {
     x: 20,
     y: 1.0,
     z: 0.2,
-    a: 2.5,
-    b: 2.5,
+    h: 2,
+    v: 2,
     s: 0.1,
+    tolerance: 1.0,
     L: 1,            // 兒童版固定為單層
     Pmax: 4,
     pMode: 'cis'

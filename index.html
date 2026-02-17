@@ -20,8 +20,8 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
 
 參數系統 (rules.md 定義):
 - x: 棍長 | y: 棍寬 | z: 棍厚
-- a: 水平棍邊緣到垂直棍交叉中點的距離
-- b: 垂直棍交叉中點到自己外緣的距離 (B = max(b1, b2...))
+- h: 水平接點 (水平棍緣露出)，程式用 a = h + y/2
+- v: 垂直接點 (垂直棍緣露出)，程式用 b = v + y/2
 - s: 相鄰水平棍間隙
 - Pn = B + (n-1) * (y + s): 位置計算公式
 
@@ -799,12 +799,9 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                     <button class="step-btn" id="completeBtn">完成圖</button>
                     <button class="step-btn" id="autoBtn">自動</button>
                 </div>
-            </div>
 
-            <!-- Controls Column -->
-            <div class="control-panel">
                 <!-- Legend (混合式命名：顏色 + V/H) -->
-                <div class="panel-section">
+                <div class="panel-section" style="margin-top: 0.8rem;">
                     <div class="panel-title">構件圖例</div>
                     <div class="legend-grid">
                         <div class="legend-item dimmed" data-beam="pink">
@@ -841,7 +838,10 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Controls Column -->
+            <div class="control-panel">
                 <!-- Parameters (符合 rules.md 定義) -->
                 <div class="panel-section">
                     <div class="panel-title">參數設定 (cm)</div>
@@ -876,21 +876,21 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                     </div>
 
                     <div class="param-group">
-                        <label class="param-label">交叉點到水平棍邊緣 (a) <span id="aVal"
-                                style="color:var(--accent-light)">2.5</span></label>
+                        <label class="param-label">水平接點 (h; 水平棍緣露出) <span id="hVal"
+                                style="color:var(--accent-light)">2</span></label>
                         <div class="param-input-group">
-                            <input type="range" id="aSlider" value="2.5" min="0" max="10" step="0.1">
-                            <input type="number" class="param-number" id="aInput" value="2.5" min="0" max="10"
+                            <input type="range" id="hSlider" value="2" min="0" max="10" step="0.1">
+                            <input type="number" class="param-number" id="hInput" value="2" min="0" max="10"
                                 step="0.1">
                         </div>
                     </div>
 
                     <div class="param-group">
-                        <label class="param-label">交叉點到垂直棍邊緣 (b) <span id="bVal"
-                                style="color:var(--accent-light)">2.5</span></label>
+                        <label class="param-label">垂直接點 (v; 垂直棍緣露出) <span id="vVal"
+                                style="color:var(--accent-light)">2</span></label>
                         <div class="param-input-group">
-                            <input type="range" id="bSlider" value="2.5" min="0" max="10" step="0.1">
-                            <input type="number" class="param-number" id="bInput" value="2.5" min="0" max="10"
+                            <input type="range" id="vSlider" value="2" min="0" max="10" step="0.1">
+                            <input type="number" class="param-number" id="vInput" value="2" min="0" max="10"
                                 step="0.1">
                         </div>
                     </div>
@@ -911,6 +911,16 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                         <div class="param-input-group">
                             <input type="range" id="PmaxSlider" value="4" min="3" max="8" step="1">
                             <input type="number" class="param-number" id="PmaxInput" value="4" min="3" max="8">
+                        </div>
+                    </div>
+
+                    <div class="param-group">
+                        <label class="param-label">水平棍平面圖容忍重疊 <span id="toleranceVal"
+                                style="color:var(--accent-light)">1</span></label>
+                        <div class="param-input-group">
+                            <input type="range" id="toleranceSlider" value="1" min="0" max="5" step="0.1">
+                            <input type="number" class="param-number" id="toleranceInput" value="1" min="0" max="5"
+                                step="0.1">
                         </div>
                     </div>
 
@@ -961,14 +971,14 @@ AI_CONTEXT_v7 (基於 rules.md 重構)
                             <p><strong>末端交叉</strong>：水平棍 (Hx) 末端永遠壓在垂直棍 (Vx) 上方</p>
 
                             <h4>H 斜插法</h4>
-                            <p>Hn-R 下緣離內側 <em>a</em> 距離處，壓在 V(n-1) 右上角，向右下延伸，上緣與 Vn 左下角交會。</p>
+                            <p>Hn-R 下緣離內側 <em>h+y/2</em> 距離處，壓在 V(n-1) 右上角，向右下延伸，上緣與 Vn 左下角交會。</p>
 
                             <h4>P 位置公式</h4>
                             <p>Pn = B + (n-1) × (y + s)</p>
                             <ul>
-                                <li>P1 = b</li>
-                                <li>P2 = b + y + s</li>
-                                <li>P3 = b + 2(y + s)</li>
+                                <li>P1 = v+y/2</li>
+                                <li>P2 = v+y/2 + y + s</li>
+                                <li>P3 = v+y/2 + 2(y + s)</li>
                             </ul>
 
                             <h4>搭建順序</h4>
