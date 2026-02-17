@@ -388,21 +388,17 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     // --- Step 5: Output & Mirroring ---
     const beams = {
-        // Layer 0 (Core)
+        // Layer 0
         red1: { ...V0, color: colors.V0, zIndex: 100 },
         green1: { color: colors.H0, x: cx, y: yH0, w: L, h: T, zIndex: 90 },
         pink1: { color: colors.V1, x: V1_left_X, y: yV1, w: W, h: T, angle: 0, zIndex: 80 },
         pink2: { ...V1R, color: colors.V1, zIndex: 80 },
+        // Layer 1
+        blue1: { ...H1R, color: colors.H1R, zIndex: 70 },
+        purple1: { x: cx - (H1R.x - cx), y: H1R.y, angle: -H1R.angle, w: L, h: T, color: COLORS.H1L, zIndex: 70 },
     };
 
-    // Layer 1 (H1 legs)
     if (params.L >= 2) {
-        beams.blue1 = { ...H1R, color: colors.H1R, zIndex: 70 };
-        beams.purple1 = { x: cx - (H1R.x - cx), y: H1R.y, angle: -H1R.angle, w: L, h: T, color: COLORS.H1L, zIndex: 70 };
-    }
-
-    // Layer 2 (H2 extension)
-    if (params.L >= 3) {
         beams.orange1 = { x: cx - (V2R.x - cx), y: V2R.y, angle: -V2R.angle, w: W, h: T, color: COLORS.V2, zIndex: 60 };
         beams.orange2 = { ...V2R, color: COLORS.V2, zIndex: 60 };
 
@@ -417,21 +413,20 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     let spanX_R = V1_right_X; // Default to V1 span
 
     // Get lowest point of active legs
-    if (params.L >= 3) {
+    if (params.L >= 2) {
         // H2R (and H2L) are the lowest.
         lowestY = H2R_Center.y + (L / 2 * Math.sin(H2_angle)) + (T / 2 * Math.cos(H2_angle));
         spanX_R = H2R_Center.x + (L / 2 * Math.cos(H2_angle)) - (T / 2 * Math.sin(H2_angle));
-    } else if (params.L >= 2) {
+    } else {
         // Lowest Y for H1R
         lowestY = H1R_Center.y + (L / 2 * Math.sin(H1_angle)) + (T / 2 * Math.cos(H1_angle));
         spanX_R = H1R_Center.x + (L / 2 * Math.cos(H1_angle)) - (T / 2 * Math.sin(H1_angle));
     }
-    // else: L=1 (core only), use defaults (groundY, V1_right_X)
 
     const trueSpan = (spanX_R - cx) * 2;
 
     // Use the active leg angle based on layer count
-    const activeLegAngle = params.L >= 3 ? H2_angle : (params.L >= 2 ? H1_angle : 0);
+    const activeLegAngle = params.L >= 2 ? H2_angle : H1_angle;
 
     const mechanics = {
         span: trueSpan / pxPerCm,

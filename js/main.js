@@ -4,9 +4,7 @@ import { Renderer } from './renderer.js';
 
 // Helper: compute max step from layer count
 function getMaxStep(layers) {
-    if (layers === 1) return 3;   // Core only (V1, H0, V0)
-    if (layers === 2) return 5;   // + H1 legs
-    return BUILD_STEPS.length - 1; // Full bridge (+ H2)
+    return layers === 1 ? 5 : BUILD_STEPS.length - 1;
 }
 
 // Application State
@@ -14,7 +12,7 @@ const state = {
     params: { ...INITIAL_PARAMS },
     currentStep: 0,
     currentView: 'top',
-    maxLayers: 3,
+    maxLayers: 2,
     zoom: 1,
     panX: 0,
     panY: 0,
