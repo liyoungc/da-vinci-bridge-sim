@@ -153,7 +153,7 @@ function initTheme() {
     const themeBtn = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const root = document.documentElement;
-    let currentTheme = localStorage.getItem('theme') || 'dark';
+    let currentTheme = localStorage.getItem('theme') || 'light';
 
     function applyTheme(theme) {
         if (theme === 'system') {

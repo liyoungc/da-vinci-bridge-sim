@@ -51,9 +51,14 @@ export class Renderer {
     drawBeam(beam, highlight = false) {
         const { ctx } = this;
         ctx.save();
-        // 實心填充，減少邊線
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 3;
+
+        const isTip = beam.beamType === 'horizontal-tip';
+
+        if (!isTip) {
+            // 只有主棍子加陰影，patch 不加（避免框線感）
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 3;
+        }
 
         if (beam.angle !== undefined) {
             ctx.translate(beam.x, beam.y);
@@ -64,9 +69,13 @@ export class Renderer {
         const ry = beam.y - beam.h / 2;
         ctx.fillStyle = beam.color;
         ctx.beginPath();
-        ctx.roundRect(rx, ry, beam.w, beam.h, 2);
+        if (isTip) {
+            // Patch 用直角矩形，與同色棍子無縫連接
+            ctx.rect(rx, ry, beam.w, beam.h);
+        } else {
+            ctx.roundRect(rx, ry, beam.w, beam.h, 2);
+        }
         ctx.fill();
-        // 不繪製邊線，避免重疊問題
         ctx.restore();
     }
 
