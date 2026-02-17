@@ -124,9 +124,17 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     // Helper: Simple 1D overlap check (Moved up for H2-R usage)
     // "Real world" check: Do the beams physically collide in this P-slot?
+    // Tolerance: allow up to 1cm overlap without blocking
+    const OVERLAP_TOLERANCE_CM = 1;
+    const tolerancePx = OVERLAP_TOLERANCE_CM * pxPerCm;
     const checkOverlap = (centerA, centerB, len) => {
-        // Strict overlap: distance < length
-        return Math.abs(centerA - centerB) < (len - 0.01);
+        // Only block if overlap exceeds 1cm tolerance
+        return Math.abs(centerA - centerB) < (len - tolerancePx);
+    };
+    // Helper: compute overlap amount in pixels (positive = overlapping)
+    const computeOverlapPx = (centerA, centerB, len) => {
+        const overlap = len - Math.abs(centerA - centerB);
+        return overlap > 0 ? overlap : 0;
     };
 
     // H2-R 預設在 P3 (右側)
@@ -174,6 +182,35 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
         H2L_P = 4;
     }
     occupiedPs_L.push(H2L_P);
+
+    // 3.5. Collect overlap highlights for rendering
+    const overlapHighlights = [];
+    const beamKeyMap = { 'H0': 'green1', 'H1R': 'blue1', 'H1L': 'purple1', 'H2R': 'cyan1', 'H2L': 'yellow1' };
+    const overlapPairs = [
+        { aName: 'H2R', aX: H2R_X, aP: H2R_P, bName: 'H0',  bX: cx,    bP: 1 },
+        { aName: 'H2R', aX: H2R_X, aP: H2R_P, bName: 'H1L', bX: H1L_X, bP: H1L_P },
+        { aName: 'H2L', aX: H2L_X, aP: H2L_P, bName: 'H0',  bX: cx,    bP: 1 },
+        { aName: 'H2L', aX: H2L_X, aP: H2L_P, bName: 'H1R', bX: H1R_X, bP: H1R_P },
+        { aName: 'H2L', aX: H2L_X, aP: H2L_P, bName: 'H2R', bX: H2R_X, bP: H2R_P },
+    ];
+    for (const pair of overlapPairs) {
+        if (pair.aP === pair.bP) {
+            const overlapPx = computeOverlapPx(pair.aX, pair.bX, x);
+            if (overlapPx > 0 && overlapPx <= tolerancePx) {
+                const overlapCenterX = (pair.aX + pair.bX) / 2;
+                const pY_top = H0_top_Y + (pair.aP - 1) * (y + s);
+                const pY_bot = H0_bot_Y - (pair.aP - 1) * (y + s);
+                overlapHighlights.push({
+                    x: overlapCenterX,
+                    topY: pY_top,
+                    botY: pY_bot,
+                    width: overlapPx,
+                    amountMm: (overlapPx / pxPerCm * 10).toFixed(1),
+                    relatedBeams: [beamKeyMap[pair.aName], beamKeyMap[pair.bName]]
+                });
+            }
+        }
+    }
 
     // 4. 計算 Y 軸座標
     const H1R_top_Y = H0_top_Y + (H1R_P - 1) * (y + s);
@@ -250,7 +287,7 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     beams.yellow1_tipV1 = rect(colors.H2L, V1_left_X, H2L_top_Y, y, y, 55, 'yellow1', 'horizontal-tip');
     beams.yellow2_tipV1 = rect(colors.H2L, V1_left_X, H2L_bot_Y, y, y, 55, 'yellow2', 'horizontal-tip');
 
-    return { beams, buildError };
+    return { beams, buildError, overlapHighlights };
 }
 
 export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
@@ -351,20 +388,21 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     // --- Step 5: Output & Mirroring ---
     const beams = {
-        // Layer 0
+        // Layer 0 (Core)
         red1: { ...V0, color: colors.V0, zIndex: 100 },
-        green1: { color: colors.H0, x: cx, y: yH0, w: L, h: T, zIndex: 90 }, // Visual only
+        green1: { color: colors.H0, x: cx, y: yH0, w: L, h: T, zIndex: 90 },
         pink1: { color: colors.V1, x: V1_left_X, y: yV1, w: W, h: T, angle: 0, zIndex: 80 },
         pink2: { ...V1R, color: colors.V1, zIndex: 80 },
-        // Layer 1
-        blue1: { ...H1R, color: colors.H1R, zIndex: 70 },
-        purple1: { x: cx - (H1R.x - cx), y: H1R.y, angle: -H1R.angle, w: L, h: T, color: COLORS.H1L, zIndex: 70 },
     };
 
-    if (params.L >= 2) { // Logic for 2nd layer if params.L set (actually controlled by maxLayers in Main)
-        // We output beams regardless, Main decides which to show? 
-        // No, current logic is strict. Let's just output them, Main filters by 'activeBeams'.
+    // Layer 1 (H1 legs)
+    if (params.L >= 2) {
+        beams.blue1 = { ...H1R, color: colors.H1R, zIndex: 70 };
+        beams.purple1 = { x: cx - (H1R.x - cx), y: H1R.y, angle: -H1R.angle, w: L, h: T, color: COLORS.H1L, zIndex: 70 };
+    }
 
+    // Layer 2 (H2 extension)
+    if (params.L >= 3) {
         beams.orange1 = { x: cx - (V2R.x - cx), y: V2R.y, angle: -V2R.angle, w: W, h: T, color: COLORS.V2, zIndex: 60 };
         beams.orange2 = { ...V2R, color: COLORS.V2, zIndex: 60 };
 
@@ -379,26 +417,21 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     let spanX_R = V1_right_X; // Default to V1 span
 
     // Get lowest point of active legs
-    if (params.L >= 2) {
+    if (params.L >= 3) {
         // H2R (and H2L) are the lowest.
-
-        // Lowest Y is center + vertical_component_of_half_diagonal
         lowestY = H2R_Center.y + (L / 2 * Math.sin(H2_angle)) + (T / 2 * Math.cos(H2_angle));
-
-        // Span X (Outer Ground Contact)
         spanX_R = H2R_Center.x + (L / 2 * Math.cos(H2_angle)) - (T / 2 * Math.sin(H2_angle));
-    } else {
+    } else if (params.L >= 2) {
         // Lowest Y for H1R
         lowestY = H1R_Center.y + (L / 2 * Math.sin(H1_angle)) + (T / 2 * Math.cos(H1_angle));
-
-        // Span X (Outer Ground Contact)
         spanX_R = H1R_Center.x + (L / 2 * Math.cos(H1_angle)) - (T / 2 * Math.sin(H1_angle));
     }
+    // else: L=1 (core only), use defaults (groundY, V1_right_X)
 
     const trueSpan = (spanX_R - cx) * 2;
 
     // Use the active leg angle based on layer count
-    const activeLegAngle = params.L >= 2 ? H2_angle : H1_angle;
+    const activeLegAngle = params.L >= 3 ? H2_angle : (params.L >= 2 ? H1_angle : 0);
 
     const mechanics = {
         span: trueSpan / pxPerCm,
