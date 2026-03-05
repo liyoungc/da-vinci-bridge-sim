@@ -305,9 +305,16 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
         H2L: { center: H2L_X, left: H2L_X - x / 2, right: H2L_X + x / 2 }
     };
 
-    // 判斷 H 棍與 V 棍交叉時誰在上面
-    // 中間交叉（V 棍在 H 棍中段）→ V 在上
-    // 末端交叉（H 棍末端靠近 V 棍）→ H 在上
+    // 每根 H 棍的「主場 V 棍」：H 棍中心對齊的 V 棍
+    // 編織規則：在主場 V 棍處 V 壓 H（V_over），其他交叉處 H 壓 V（H_over）
+    const homeV = {
+        H0:  'V0',
+        H1R: 'V1R',
+        H1L: 'V1L',
+        H2R: 'V2R',
+        H2L: 'V2L'
+    };
+
     function getCrossingType(hName, vName) {
         const hBar = H_info[hName];
         const vX = V_X[vName];
@@ -316,15 +323,11 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
         // 檢查 H 棍是否覆蓋 V 棍位置
         if (vX < hBar.left - y / 2 || vX > hBar.right + y / 2) return null; // 不交叉
 
-        // 判斷是中間還是末端：距離 H 中心越遠越接近末端
-        const distFromCenter = Math.abs(vX - hBar.center);
-        const halfLen = x / 2;
-
-        // 末端區域 = 距邊緣 a 以內
-        if (distFromCenter >= halfLen - a) {
-            return 'H_over'; // 末端交叉，H 在上
+        // 編織邏輯：主場 V 棍壓在 H 上方，非主場則 H 壓在 V 上方
+        if (homeV[hName] === vName) {
+            return 'V_over'; // 主場：V 在上
         } else {
-            return 'V_over'; // 中間交叉，V 在上
+            return 'H_over'; // 非主場：H 在上
         }
     }
 
@@ -339,6 +342,16 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
 
     let fullInterlockCount = 0;
     let halfInterlockCount = 0;
+    const interlockRings = [];  // 互鎖環位置資料，用於繪製
+
+    // H 棍的 Y 座標（上半 / 下半）
+    const H_Y = {
+        H0:  { top: H0_top_Y,  bot: H0_bot_Y },
+        H1R: { top: H1R_top_Y, bot: H1R_bot_Y },
+        H1L: { top: H1L_top_Y, bot: H1L_bot_Y },
+        H2R: { top: H2R_top_Y, bot: H2R_bot_Y },
+        H2L: { top: H2L_top_Y, bot: H2L_bot_Y }
+    };
 
     for (const [vLeft, vRight] of adjacentVPairs) {
         if (V_X[vLeft] === undefined || V_X[vRight] === undefined) continue;
@@ -363,13 +376,43 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
                 const corners = [h1.left, h1.right, h2.left, h2.right];
                 const hOverCount = corners.filter(c => c === 'H_over').length;
 
+                let ringType = null;
                 if (hOverCount === 2 && h1.left !== h1.right && h2.left !== h2.right
                     && h1.left !== h2.left) {
-                    // 棋盤格式 = 完全互鎖
+                    ringType = 'full';
                     fullInterlockCount++;
                 } else if (hOverCount === 1 || hOverCount === 3) {
-                    // 只有 3 個交叉點正確 = 半互鎖
+                    ringType = 'half';
                     halfInterlockCount++;
+                }
+
+                if (ringType) {
+                    const vLeftX = V_X[vLeft];
+                    const vRightX = V_X[vRight];
+                    const h1Y = H_Y[h1.name];
+                    const h2Y = H_Y[h2.name];
+                    if (h1Y && h2Y) {
+                        // 上半部分環
+                        interlockRings.push({
+                            type: ringType,
+                            vLeftX, vRightX,
+                            hTopY: Math.min(h1Y.top, h2Y.top),
+                            hBotY: Math.max(h1Y.top, h2Y.top),
+                            hBars: [h1.name, h2.name],
+                            vBars: [vLeft, vRight],
+                            group: 'top'
+                        });
+                        // 下半部分環
+                        interlockRings.push({
+                            type: ringType,
+                            vLeftX, vRightX,
+                            hTopY: Math.min(h1Y.bot, h2Y.bot),
+                            hBotY: Math.max(h1Y.bot, h2Y.bot),
+                            hBars: [h1.name, h2.name],
+                            vBars: [vLeft, vRight],
+                            group: 'bottom'
+                        });
+                    }
                 }
             }
         }
@@ -385,7 +428,7 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
         overlapCount: overlapHighlights.length
     };
 
-    return { beams, buildError, overlapHighlights, topViewMetrics };
+    return { beams, buildError, overlapHighlights, interlockRings, topViewMetrics };
 }
 
 export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {

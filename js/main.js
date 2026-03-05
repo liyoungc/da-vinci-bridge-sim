@@ -333,12 +333,14 @@ function render() {
     let allBeams;
     let buildError = null;
     let overlapHighlights = [];
+    let interlockRings = [];
 
     if (state.currentView === 'top') {
         const result = getTopViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
         buildError = result.buildError;
         overlapHighlights = result.overlapHighlights || [];
+        interlockRings = result.interlockRings || [];
     } else {
         const result = getSideViewBeams(cx, cy, scale, state.params, currentColors);
         allBeams = result.beams;
@@ -357,8 +359,8 @@ function render() {
     const metrics = computeStructuralMetrics(state.params);
     document.getElementById('v1Spacing').textContent = metrics.V1_spacing.toFixed(1);
     document.getElementById('v1v2Distance').textContent = metrics.V1_V2_distance !== null ? metrics.V1_V2_distance.toFixed(1) : '-';
-    document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount + metrics.halfInterlockCount;
-    document.getElementById('halfInterlockCount').textContent = metrics.fullInterlockCount;
+    document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount;
+    document.getElementById('halfInterlockCount').textContent = metrics.halfInterlockCount;
     document.getElementById('requiredFriction').textContent = metrics.requiredFriction.toFixed(2);
     document.getElementById('interlockRatio').textContent = (metrics.interlockRatio * 100).toFixed(0) + '%';
     document.getElementById('heightSpanRatio').textContent = metrics.heightSpanRatio.toFixed(2);
@@ -411,6 +413,15 @@ function render() {
                 renderer.drawOverlapHighlight(highlight);
             }
         }
+    }
+
+    // Draw interlock ring highlights (only for top view, only on final step)
+    if (state.currentView === 'top' && interlockRings.length > 0
+        && state.currentStep === getMaxStep(state.maxLayers)) {
+        const barWidth = state.params.y * scale * 12;
+        interlockRings.forEach((ring, i) => {
+            renderer.drawInterlockRing(ring, i, barWidth);
+        });
     }
 
     // Error Message (Show in both views if error exists)

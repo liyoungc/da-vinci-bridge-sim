@@ -107,6 +107,64 @@ export class Renderer {
         }
     }
 
+    drawInterlockRing(ring, index, barWidth) {
+        const { ctx } = this;
+        ctx.save();
+
+        // 每個環用不同顏色，醒目且互不遮擋
+        const colors = [
+            { stroke: '#00ffff', fill: 'rgba(0, 255, 255, 0.12)', label: 'cyan' },
+            { stroke: '#ff00ff', fill: 'rgba(255, 0, 255, 0.12)', label: 'magenta' },
+            { stroke: '#ffff00', fill: 'rgba(255, 255, 0, 0.12)', label: 'yellow' },
+            { stroke: '#00ff88', fill: 'rgba(0, 255, 136, 0.12)', label: 'green' },
+            { stroke: '#ff8800', fill: 'rgba(255, 136, 0, 0.12)', label: 'orange' },
+            { stroke: '#88aaff', fill: 'rgba(136, 170, 255, 0.12)', label: 'blue' },
+            { stroke: '#ff4488', fill: 'rgba(255, 68, 136, 0.12)', label: 'pink' },
+            { stroke: '#aaffaa', fill: 'rgba(170, 255, 170, 0.12)', label: 'lime' },
+        ];
+        const colorSet = colors[index % colors.length];
+
+        // 用 barWidth 做偏移量，避免完全重疊
+        const pad = barWidth * 0.3;
+        const offset = (index % 4) * pad * 0.4;
+
+        const left = ring.vLeftX - barWidth / 2 - pad - offset;
+        const right = ring.vRightX + barWidth / 2 + pad + offset;
+        const top = ring.hTopY - barWidth / 2 - pad - offset;
+        const bottom = ring.hBotY + barWidth / 2 + pad + offset;
+        const w = right - left;
+        const h = bottom - top;
+        const r = Math.min(6, barWidth * 0.5);
+
+        // 半透明填充
+        ctx.fillStyle = colorSet.fill;
+        ctx.beginPath();
+        ctx.roundRect(left, top, w, h, r);
+        ctx.fill();
+
+        // 醒目邊框
+        const dashType = ring.type === 'full' ? [] : [6, 4];
+        ctx.setLineDash(dashType);
+        ctx.strokeStyle = colorSet.stroke;
+        ctx.lineWidth = ring.type === 'full' ? 2.5 : 1.5;
+        ctx.shadowColor = colorSet.stroke;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.roundRect(left, top, w, h, r);
+        ctx.stroke();
+
+        // 第二層描邊增加亮度
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = ring.type === 'full' ? 1.2 : 0.8;
+        ctx.beginPath();
+        ctx.roundRect(left + 1, top + 1, w - 2, h - 2, Math.max(0, r - 1));
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+
     drawGrid(panX, panY, zoom, params = null, view = 'top', theme = 'dark') {
         const { ctx, width, height } = this;
         const gridSize = 50 * zoom;
