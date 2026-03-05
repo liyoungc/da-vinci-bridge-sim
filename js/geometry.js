@@ -331,7 +331,7 @@ export function getSideViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
     const offsetAngle = Math.asin(Math.min(1, T / dist));
     const H1_angle = directAngle + offsetAngle;
 
-    const distToCenter = L / 2 - a - W;
+    const distToCenter = L / 2 - a - W / 2;
     const cosH1 = Math.cos(H1_angle);
     const sinH1 = Math.sin(H1_angle);
     const perpX = sinH1;
