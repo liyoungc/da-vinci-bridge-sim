@@ -357,8 +357,8 @@ function render() {
     const metrics = computeStructuralMetrics(state.params);
     document.getElementById('v1Spacing').textContent = metrics.V1_spacing.toFixed(1);
     document.getElementById('v1v2Distance').textContent = metrics.V1_V2_distance !== null ? metrics.V1_V2_distance.toFixed(1) : '-';
-    document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount;
-    document.getElementById('halfInterlockCount').textContent = metrics.halfInterlockCount;
+    document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount + metrics.halfInterlockCount;
+    document.getElementById('halfInterlockCount').textContent = metrics.fullInterlockCount;
     document.getElementById('requiredFriction').textContent = metrics.requiredFriction.toFixed(2);
     document.getElementById('interlockRatio').textContent = (metrics.interlockRatio * 100).toFixed(0) + '%';
     document.getElementById('heightSpanRatio').textContent = metrics.heightSpanRatio.toFixed(2);
