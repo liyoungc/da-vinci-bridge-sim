@@ -321,7 +321,7 @@ export function getTopViewBeams(cx, cy, scale, params, colors = COLORS_DARK) {
         const halfLen = x / 2;
 
         // 末端區域 = 距邊緣 a 以內
-        if (distFromCenter > halfLen - a) {
+        if (distFromCenter >= halfLen - a) {
             return 'H_over'; // 末端交叉，H 在上
         } else {
             return 'V_over'; // 中間交叉，V 在上
@@ -605,10 +605,13 @@ export function computeStructuralMetrics(params) {
         activeLegAngle = H2_angle;
     }
 
-    const legAngleDeg = Math.abs(activeLegAngle * 180 / Math.PI);
-    const legAngleRad = Math.abs(activeLegAngle);
+    // 取銳角（與水平線的夾角），角度可能在第二象限（>90°）
+    let slopeAngleRad = Math.abs(activeLegAngle) % Math.PI;
+    if (slopeAngleRad > Math.PI / 2) slopeAngleRad = Math.PI - slopeAngleRad;
+    const legAngleDeg = slopeAngleRad * 180 / Math.PI;
+    const legAngleRad = slopeAngleRad;
 
-    // 需要摩擦係數 μ_min = tan(θ)
+    // 需要摩擦係數 μ_min = tan(θ)，θ 為腿與水平面的銳角
     const requiredFriction = Math.tan(legAngleRad);
 
     // h/x 互鎖參與比率
