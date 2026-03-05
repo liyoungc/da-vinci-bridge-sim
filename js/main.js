@@ -360,6 +360,7 @@ function render() {
     document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount;
     document.getElementById('halfInterlockCount').textContent = metrics.halfInterlockCount;
     document.getElementById('requiredFriction').textContent = metrics.requiredFriction.toFixed(2);
+    document.getElementById('interlockRatio').textContent = (metrics.interlockRatio * 100).toFixed(0) + '%';
     document.getElementById('heightSpanRatio').textContent = metrics.heightSpanRatio.toFixed(2);
 
     // Error Sync: Check Top View for errors even if in Side View
