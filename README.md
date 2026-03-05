@@ -266,3 +266,119 @@ Before starting, remember these two rules applicable to every intersection, and 
 ## Summary
 
 This is the "Reciprocal Frame" structure. Every beam supports another while being supported itself. Beams do not have a single absolute Z-index; it depends on the specific intersection point.
+
+---
+
+# API Interface for LLM / Agent Integration
+
+The simulator exposes a programmatic API that allows LLMs, AI agents, or scripts to feed parameters and retrieve structural metrics **without any backend server** — everything runs client-side.
+
+## Method 1: URL Query Parameter Mode
+
+Append `?api` to the page URL along with any parameters. The page will return **pure JSON** instead of rendering the UI.
+
+**Base URL**: `https://liyoungc.github.io/da-vinci-bridge-sim/index.html`
+
+**Example**:
+```
+index.html?api&x=20&y=1&z=0.2&h=2&v=2&s=0.1&L=2&Pmax=4&pMode=cis&tolerance=1
+```
+
+**Supported Parameters**:
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `x` | float | 20 | Beam length (cm) |
+| `y` | float | 1.0 | Beam width (cm) |
+| `z` | float | 0.2 | Beam thickness (cm) |
+| `h` | float | 2 | Horizontal junction exposed length (cm) |
+| `v` | float | 2 | Vertical junction exposed length (cm) |
+| `s` | float | 0.1 | Gap between horizontal beams (cm) |
+| `L` | int | 2 | Number of layers (1 or 2) |
+| `Pmax` | int | 4 | Max horizontal slot positions per side |
+| `tolerance` | float | 1.0 | Overlap tolerance (cm) |
+| `pMode` | string | "cis" | P-position search mode: "cis" or "trans" |
+
+All parameters are optional — omitted ones use defaults.
+
+**Response** (JSON):
+```json
+{
+  "V1_spacing": 15.0,
+  "V1_V2_distance": 7.0,
+  "span": 42.3,
+  "height": 5.2,
+  "legAngle": 7.05,
+  "heightSpanRatio": 0.123,
+  "requiredFriction": 0.124,
+  "interlockRatio": 0.25,
+  "fullInterlockCount": 8,
+  "halfInterlockCount": 0,
+  "overlapCount": 0,
+  "buildError": null,
+  "params": { "x": 20, "y": 1, "z": 0.2, "h": 2, "v": 2, "s": 0.1, "L": 2, "Pmax": 4, "pMode": "cis", "tolerance": 1 }
+}
+```
+
+### Response Fields
+
+| Field | Unit | Description |
+|-------|------|-------------|
+| `V1_spacing` | cm | Inner pier width (distance between V1 left & right) |
+| `V1_V2_distance` | cm | Distance between adjacent V1 and V2 (null if L=1) |
+| `span` | cm | Total bridge span (foot to foot) |
+| `height` | cm | Total height (top of V0 to lowest leg point) |
+| `legAngle` | degrees | Outermost leg angle from horizontal |
+| `heightSpanRatio` | - | Height / Span ratio (higher = stronger arch effect) |
+| `requiredFriction` | - | Minimum friction coefficient needed (= tan(legAngle)) |
+| `interlockRatio` | - | Fraction of beam length participating in interlocking (= 2a/x) |
+| `fullInterlockCount` | - | Number of fully interlocked rectangular crossing patterns |
+| `halfInterlockCount` | - | Number of partially interlocked patterns (3/4 correct crossings) |
+| `overlapCount` | - | Number of beam overlap warnings in top view |
+| `buildError` | - | Error message if structure cannot be built, otherwise null |
+
+## Method 2: Browser Console (JavaScript)
+
+If the page is already open in a browser, use the developer console:
+
+```js
+// Compute metrics with custom parameters
+window.bridgeAPI.compute({ x: 25, y: 1.5, z: 0.3, h: 3, L: 2 })
+
+// Get current UI parameters
+window.bridgeAPI.getParams()
+
+// Update parameters live (re-renders the visualization)
+window.bridgeAPI.setParams({ x: 25, h: 3 })
+```
+
+## Method 3: LLM Tool Use with Web Fetch
+
+An LLM agent with web browsing capability can call the API like this:
+
+**Prompt pattern for the agent**:
+```
+Fetch: https://liyoungc.github.io/da-vinci-bridge-sim/index.html?api&x=20&y=1&z=0.2&h=2&v=2&L=2
+Extract the JSON response and analyze the structural metrics.
+```
+
+**Example: Parameter sweep** — an agent can systematically test different configurations:
+```
+For h = 1, 2, 3, 4, 5:
+  Fetch: index.html?api&h={h}&x=20&y=1&z=0.2
+  Record: V1_spacing, fullInterlockCount, requiredFriction
+Compare results and recommend the optimal h value.
+```
+
+## Key Metrics for Structural Analysis
+
+When evaluating a bridge configuration, pay attention to:
+
+1. **`buildError`** — If not null, the structure is impossible to build
+2. **`V1_spacing`** — Too small → narrow pier, unstable base
+3. **`V1_V2_distance`** — Smaller → more stable layer transition
+4. **`fullInterlockCount`** — More → stronger mechanical locking
+5. **`halfInterlockCount`** — These are weak points, prone to loosening
+6. **`requiredFriction`** — Higher → needs rougher ground surface
+7. **`interlockRatio`** — Higher → more grip, but narrower stance
+8. **`heightSpanRatio`** — Higher → stronger arch effect
