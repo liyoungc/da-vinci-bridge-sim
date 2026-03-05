@@ -1,5 +1,5 @@
 import { INITIAL_PARAMS, BUILD_STEPS, COLORS_DARK, COLORS_LIGHT } from './constants.js';
-import { getTopViewBeams, getSideViewBeams } from './geometry.js';
+import { getTopViewBeams, getSideViewBeams, computeStructuralMetrics } from './geometry.js';
 import { Renderer } from './renderer.js';
 
 // Helper: compute max step from layer count
@@ -353,6 +353,15 @@ function render() {
         }
     }
 
+    // Update structural metrics (both views)
+    const metrics = computeStructuralMetrics(state.params);
+    document.getElementById('v1Spacing').textContent = metrics.V1_spacing.toFixed(1);
+    document.getElementById('v1v2Distance').textContent = metrics.V1_V2_distance !== null ? metrics.V1_V2_distance.toFixed(1) : '-';
+    document.getElementById('fullInterlockCount').textContent = metrics.fullInterlockCount;
+    document.getElementById('halfInterlockCount').textContent = metrics.halfInterlockCount;
+    document.getElementById('requiredFriction').textContent = metrics.requiredFriction.toFixed(2);
+    document.getElementById('heightSpanRatio').textContent = metrics.heightSpanRatio.toFixed(2);
+
     // Error Sync: Check Top View for errors even if in Side View
     // Side view physically cannot be built if Top view has overlaps/P-position failures.
     if (!buildError && state.currentView === 'side') {
@@ -419,7 +428,55 @@ function render() {
     ctx.restore();
 }
 
+// API Interface
+// 1. window.bridgeAPI.compute(params) — 程式化呼叫
+// 2. URL ?api&x=20&y=1&z=0.2... — 回傳 JSON 到頁面
+window.bridgeAPI = {
+    compute(overrides = {}) {
+        const params = { ...INITIAL_PARAMS, ...overrides };
+        return computeStructuralMetrics(params);
+    },
+    getParams() {
+        return { ...state.params };
+    },
+    setParams(overrides) {
+        Object.assign(state.params, overrides);
+        render();
+        return this.compute(state.params);
+    }
+};
+
+// Check for API mode via URL query params
+function handleAPIMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('api')) return false;
+
+    const paramKeys = ['x', 'y', 'z', 'h', 'v', 's', 'tolerance', 'L', 'Pmax'];
+    const overrides = {};
+    for (const key of paramKeys) {
+        if (urlParams.has(key)) {
+            overrides[key] = parseFloat(urlParams.get(key));
+        }
+    }
+    if (urlParams.has('pMode')) {
+        overrides.pMode = urlParams.get('pMode');
+    }
+
+    const result = window.bridgeAPI.compute(overrides);
+
+    // 將 JSON 輸出到頁面（供 agent 擷取）
+    document.body.innerHTML = '';
+    document.body.style.cssText = 'background:#000;color:#0f0;font-family:monospace;padding:20px;white-space:pre-wrap';
+    document.body.textContent = JSON.stringify(result, null, 2);
+
+    // 也設定 title 方便 agent 確認
+    document.title = 'Bridge API Response';
+    return true;
+}
+
 // Start
-initUI();
-render();
-window.addEventListener('resize', render);
+if (!handleAPIMode()) {
+    initUI();
+    render();
+    window.addEventListener('resize', render);
+}
